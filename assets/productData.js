@@ -3,7 +3,7 @@ import { assets } from "./assets";
 export const products = [
   {
     id: 1,
-    name: "Apple Earphones",
+    name: "Srikar",
     description: "Noise-cancellation, 40-hour battery",
     rating: 4.5,
     price: "$299.99",
@@ -11,7 +11,7 @@ export const products = [
   },
   {
     id: 2,
-    name: "Bose QuietComfort 45",
+    name: "Bose  45",
     description: "Noise Cancellation, 24-hour battery",
     rating: 4.5,
     price: "$329.99",
