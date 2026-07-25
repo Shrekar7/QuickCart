@@ -6,30 +6,33 @@ import Image from "next/image";
 import { useClerk, UserButton, useUser } from "@clerk/nextjs";
 import { assets, BagIcon } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
+import { categories } from "@/lib/categories";
 
 
 // Small circular icon button — same treatment as the social links in the
 // Footer, so hover states feel consistent across the whole site.
-const IconButton = ({ onClick, children, label }) => (
+// Now supports an optional badge (used for the cart item count).
+const IconButton = ({ onClick, children, label, badge }) => (
   <button
     onClick={onClick}
     aria-label={label}
-    className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F5B700]/10 transition-colors duration-300"
+    className="relative w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F5B700]/10 transition-colors duration-300"
   >
     {children}
+    {badge > 0 && (
+      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#E8578E] text-white text-[10px] font-bold flex items-center justify-center">
+        {badge > 99 ? "99+" : badge}
+      </span>
+    )}
   </button>
 );
 
-const categories = [
-  { href: "/category/doctor", label: "Doctor" },
-  { href: "/category/superhero", label: "Superhero" },
-  { href: "/category/service", label: "Service" },
-];
-
 const Navbar = () => {
-  const { isSeller, router } = useAppContext();
+  const { isSeller, router, getCartCount } = useAppContext();
   const { openSignIn } = useClerk();
   const { isSignedIn } = useUser();
+
+  const cartCount = getCartCount();
 
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-4 border-b border-[#2E1A47]/8 bg-white text-[#2E1A47]">
@@ -70,8 +73,8 @@ const Navbar = () => {
             <div className="w-56 rounded-xl border border-[#EDEBFB] bg-white shadow-xl overflow-hidden py-1.5">
               {categories.map((cat) => (
                 <Link
-                  key={cat.href}
-                  href={cat.href}
+                  key={cat.slug}
+                  href={`/category/${cat.slug}`}
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#2E1A47]/80 hover:bg-[#FAF9FF] hover:text-[#2E1A47] transition-colors"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-[#F5B700]" />
@@ -108,7 +111,7 @@ const Navbar = () => {
           <Image src={assets.search_icon} alt="" width={17} height={17} />
         </IconButton>
 
-        <IconButton onClick={() => router.push("/cart")} label="Cart">
+        <IconButton onClick={() => router.push("/cart")} label="Cart" badge={cartCount}>
           <Image src={assets.cart_icon} alt="" width={17} height={17} />
         </IconButton>
 
@@ -137,7 +140,7 @@ const Navbar = () => {
           <Image src={assets.search_icon} alt="" width={17} height={17} />
         </IconButton>
 
-        <IconButton onClick={() => router.push("/cart")} label="Cart">
+        <IconButton onClick={() => router.push("/cart")} label="Cart" badge={cartCount}>
           <Image src={assets.cart_icon} alt="" width={20} height={20} />
         </IconButton>
 

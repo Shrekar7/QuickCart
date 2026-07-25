@@ -8,49 +8,49 @@ const categories = [
     id: 1,
     name: "Halloween",
     image: assets.Poster_halloween, // TODO: swap for real Halloween costume photo
-    href: "/all-products?category=Halloween",
+    href: "/category/halloween",
   },
   {
     id: 2,
     name: "Animals & Birds",
     image: assets.animal_birds_poster, // TODO: swap for real animal costume photo
-    href: "/all-products?category=Animals & Birds",
+    href: "/category/animals-and-birds",
   },
   {
     id: 3,
     name: "Indian State & Dance",
     image: assets.indian_state_poster, // TODO: swap for real dance costume photo
-    href: "/all-products?category=Indian State & Dance",
+    href: "/category/indian-state-and-dance",
   },
   {
     id: 4,
     name: "Superhero",
     image: assets.superhero_poster, // TODO: swap for real superhero costume photo
-    href: "/all-products?category=Superhero",
+    href: "/category/superhero",
   },
   {
     id: 5,
     name: "Fairy Tale & Fantasy",
     image: assets.fairytale_poster, // TODO: swap for real fantasy costume photo
-    href: "/all-products?category=Fairy Tale & Fantasy",
+    href: "/category/fairy-tale-and-fantasy",
   },
   {
     id: 6,
     name: "Profession Dress-up",
     image: assets.service_poster, // TODO: swap for real profession costume photo
-    href: "/all-products?category=Profession Dress-up",
+    href: "/category/profession-dress-up",
   },
   {
     id: 7,
     name: "Historical & Mythology",
     image: assets.History, // TODO: swap for real historical costume photo
-    href: "/all-products?category=Historical & Mythology",
+    href: "/category/historical-and-mythology",
   },
   {
     id: 8,
     name: "Sports & Team Wear",
     image: assets.Sports_poster, // TODO: swap for real sports costume photo
-    href: "/all-products?category=Sports & Team Wear",
+    href: "/category/sports-and-team-wear",
   },
 ];
 
