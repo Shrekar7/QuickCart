@@ -34,11 +34,23 @@ export const syncUserCreation = inngest.createFunction(
     };
 
     await connectDB();
+
+    const existingByEmail = await User.findOne({ email: userData.email });
+
+    if (existingByEmail && existingByEmail._id !== id) {
+      console.warn(
+        `Skipping create: email ${userData.email} already exists under a different id (${existingByEmail._id}), new id was ${id}`
+      );
+      return { success: false, reason: "email_conflict" };
+    }
+
     await User.findByIdAndUpdate(id, userData, {
       upsert: true,
       new: true,
       setDefaultsOnInsert: true,
     });
+
+    return { success: true };
   }
 );
 
