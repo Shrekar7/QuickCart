@@ -51,13 +51,13 @@ const Product = () => {
 
   const handleAddToCart = () => {
     if (!requireSize()) return;
-    addToCart(productData._id);
+    addToCart(productData._id, selectedSize);
     toast.success("Added to cart");
   };
 
   const handleBuyNow = () => {
     if (!requireSize()) return;
-    addToCart(productData._id);
+    addToCart(productData._id, selectedSize);
     router.push("/cart");
   };
 
@@ -78,20 +78,20 @@ const Product = () => {
           <span className="hover:text-[#8B5CF6] cursor-pointer transition-colors" onClick={() => router.push("/")}>
             Home
           </span>
-          <span>/</span>
+          <span className="text-[#2E1A47]/20">/</span>
           <span className="hover:text-[#8B5CF6] cursor-pointer transition-colors" onClick={() => router.push("/all-products")}>
             Shop
           </span>
-          <span>/</span>
+          <span className="text-[#2E1A47]/20">/</span>
           <span className="text-[#2E1A47] font-medium">{productData.name}</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
           {/* Gallery */}
           <div>
-            <div className="relative rounded-2xl overflow-hidden bg-[#FAF9FF] border border-[#EDEBFB] mb-4 aspect-square">
+            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#FAF9FF] to-[#F3EFFF] border border-[#EDEBFB] mb-4 aspect-square shadow-[0_8px_30px_rgba(139,92,246,0.08)]">
               {discountPercent > 0 && (
-                <span className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-md"
+                <span className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-lg animate-[fadeInDown_0.4s_ease-out]"
                   style={{ background: "linear-gradient(135deg, #E8578E 0%, #C23A6F 100%)" }}
                 >
                   {discountPercent}% OFF
@@ -102,9 +102,9 @@ const Product = () => {
               <button
                 onClick={() => setIsWishlisted((prev) => !prev)}
                 aria-label="Add to wishlist"
-                className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-md hover:scale-110 transition-transform"
+                className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-transform duration-200"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill={isWishlisted ? "#E8578E" : "none"}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill={isWishlisted ? "#E8578E" : "none"} className="transition-all duration-300">
                   <path
                     d="M12 21s-6.7-4.35-9.5-8.1C.6 10.1 1.2 6.3 4.4 4.9c2.2-1 4.7-.3 6.1 1.6l1.5 2 1.5-2c1.4-1.9 3.9-2.6 6.1-1.6 3.2 1.4 3.8 5.2 1.9 8-2.8 3.75-9.5 8.1-9.5 8.1z"
                     stroke={isWishlisted ? "#E8578E" : "#2E1A47"}
@@ -118,40 +118,43 @@ const Product = () => {
                 src={mainImage || productData.image[0]}
                 alt={productData.name}
                 fill
-                className="object-contain mix-blend-multiply p-6"
+                className="object-contain mix-blend-multiply p-8 transition-transform duration-500 hover:scale-105"
               />
             </div>
 
             <div className="grid grid-cols-4 gap-3">
-              {productData.image.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setMainImage(image)}
-                  className={`relative aspect-square rounded-xl overflow-hidden bg-[#FAF9FF] border-2 transition-colors ${
-                    (mainImage || productData.image[0]) === image
-                      ? "border-[#8B5CF6]"
-                      : "border-[#EDEBFB] hover:border-[#8B5CF6]/50"
-                  }`}
-                >
-                  <Image
-                    src={image}
-                    alt=""
-                    fill
-                    className="object-contain mix-blend-multiply p-2"
-                  />
-                </button>
-              ))}
+              {productData.image.map((image, index) => {
+                const active = (mainImage || productData.image[0]) === image;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setMainImage(image)}
+                    className={`relative aspect-square rounded-2xl overflow-hidden bg-[#FAF9FF] border-2 transition-all duration-300 ${
+                      active
+                        ? "border-[#8B5CF6] shadow-md shadow-[#8B5CF6]/15 scale-[1.02]"
+                        : "border-[#EDEBFB] hover:border-[#8B5CF6]/50 hover:scale-[1.02]"
+                    }`}
+                  >
+                    <Image
+                      src={image}
+                      alt=""
+                      fill
+                      className="object-contain mix-blend-multiply p-2"
+                    />
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Details */}
           <div className="flex flex-col">
-            <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.2em] uppercase text-[#8B5CF6] mb-3 w-fit">
+            <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.2em] uppercase text-[#8B5CF6] mb-3 w-fit px-3 py-1.5 rounded-full bg-[#8B5CF6]/8">
               <span className="w-1.5 h-1.5 rounded-full bg-[#F5B700]" />
               {productData.category}
             </span>
 
-            <h1 className="text-3xl md:text-[38px] font-serif tracking-tight text-[#2E1A47] leading-tight">
+            <h1 className="text-3xl md:text-[40px] font-serif tracking-tight text-[#2E1A47] leading-tight">
               {productData.name}
             </h1>
 
@@ -170,13 +173,13 @@ const Product = () => {
               {productData.description}
             </p>
 
-            {/* Price block, relabeled */}
-            <div className="mt-6 rounded-2xl bg-[#FAF9FF] border border-[#EDEBFB] p-5">
+            {/* Price block */}
+            <div className="mt-6 rounded-2xl bg-gradient-to-br from-[#FAF9FF] to-white border border-[#EDEBFB] p-5 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-widest text-[#5B4B75]/50 mb-1.5">
                 Special price
               </p>
               <div className="flex items-baseline gap-3 flex-wrap">
-                <p className="text-4xl font-serif text-[#2E1A47]">
+                <p className="text-4xl font-serif bg-gradient-to-r from-[#2E1A47] to-[#6D3FD6] bg-clip-text text-transparent">
                   {currency}{productData.offerPrice}
                 </p>
                 {discountPercent > 0 && (
@@ -187,7 +190,7 @@ const Product = () => {
                         {currency}{productData.price}
                       </span>
                     </p>
-                    <span className="text-sm font-semibold text-[#2E7D6B]">
+                    <span className="text-sm font-semibold text-[#2E7D6B] px-2.5 py-1 rounded-full bg-[#2E7D6B]/8">
                       You save {currency}{(productData.price - productData.offerPrice).toFixed(2)} ({discountPercent}%)
                     </span>
                   </>
@@ -213,8 +216,8 @@ const Product = () => {
                         onClick={() => setSelectedSize(size)}
                         className={`px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 ${
                           active
-                            ? "text-white border-transparent"
-                            : "text-[#2E1A47]/70 bg-white border-[#2E1A47]/15 hover:border-[#8B5CF6] hover:text-[#8B5CF6]"
+                            ? "text-white border-transparent scale-105 shadow-md shadow-[#8B5CF6]/25"
+                            : "text-[#2E1A47]/70 bg-white border-[#2E1A47]/15 hover:border-[#8B5CF6] hover:text-[#8B5CF6] hover:scale-105"
                         }`}
                         style={
                           active
@@ -264,13 +267,13 @@ const Product = () => {
             <div className="hidden md:flex items-center gap-3 mt-8">
               <button
                 onClick={handleAddToCart}
-                className="w-full py-3.5 rounded-full font-semibold text-[#2E1A47] bg-white border border-[#2E1A47]/15 hover:border-[#8B5CF6] hover:text-[#8B5CF6] transition-colors"
+                className="w-full py-3.5 rounded-full font-semibold text-[#2E1A47] bg-white border border-[#2E1A47]/15 hover:border-[#8B5CF6] hover:text-[#8B5CF6] hover:shadow-md transition-all duration-300"
               >
                 Add to Cart
               </button>
               <button
                 onClick={handleBuyNow}
-                className="w-full py-3.5 rounded-full font-semibold text-white shadow-md transition-transform hover:scale-[1.02]"
+                className="w-full py-3.5 rounded-full font-semibold text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#8B5CF6]/25"
                 style={{ background: "linear-gradient(135deg, #8B5CF6 0%, #6D3FD6 100%)" }}
               >
                 Buy Now
@@ -301,9 +304,9 @@ const Product = () => {
         {/* Featured products */}
         <div className="flex flex-col items-center mt-20 md:mt-28">
           <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.25em] uppercase text-[#8B5CF6] mb-4">
-            <span className="w-6 h-px bg-[#8B5CF6]" />
+            <span className="w-6 h-px bg-gradient-to-r from-transparent to-[#8B5CF6]" />
             You might also like
-            <span className="w-6 h-px bg-[#8B5CF6]" />
+            <span className="w-6 h-px bg-gradient-to-l from-transparent to-[#8B5CF6]" />
           </span>
           <h2 className="text-2xl md:text-3xl font-serif tracking-tight text-[#2E1A47]">
             Featured Products
@@ -319,7 +322,7 @@ const Product = () => {
 
           <button
             onClick={() => router.push("/all-products")}
-            className="group flex items-center gap-2 mb-16 px-8 py-3 rounded-full border border-[#2E1A47]/15 text-[#2E1A47] text-sm font-semibold hover:border-[#8B5CF6] hover:bg-[#8B5CF6]/5 hover:text-[#8B5CF6] transition-all duration-300"
+            className="group flex items-center gap-2 mb-16 px-8 py-3 rounded-full border border-[#2E1A47]/15 text-[#2E1A47] text-sm font-semibold hover:border-[#8B5CF6] hover:bg-[#8B5CF6]/5 hover:text-[#8B5CF6] hover:shadow-md transition-all duration-300"
           >
             See more
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform">
@@ -330,7 +333,7 @@ const Product = () => {
       </div>
 
       {/* Sticky mobile action bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#EDEBFB] px-4 py-3 flex items-center gap-3 shadow-[0_-4px_16px_rgba(46,26,71,0.06)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-[#EDEBFB] px-4 py-3 flex items-center gap-3 shadow-[0_-4px_20px_rgba(46,26,71,0.08)]">
         <div className="shrink-0">
           <p className="text-lg font-serif text-[#2E1A47] leading-none">
             {currency}{productData.offerPrice}
@@ -343,13 +346,13 @@ const Product = () => {
         </div>
         <button
           onClick={handleAddToCart}
-          className="flex-1 py-3 rounded-full font-semibold text-sm text-[#2E1A47] bg-white border border-[#2E1A47]/15"
+          className="flex-1 py-3 rounded-full font-semibold text-sm text-[#2E1A47] bg-white border border-[#2E1A47]/15 active:scale-95 transition-transform"
         >
           Add to Cart
         </button>
         <button
           onClick={handleBuyNow}
-          className="flex-1 py-3 rounded-full font-semibold text-sm text-white"
+          className="flex-1 py-3 rounded-full font-semibold text-sm text-white active:scale-95 transition-transform"
           style={{ background: "linear-gradient(135deg, #8B5CF6 0%, #6D3FD6 100%)" }}
         >
           Buy Now
@@ -357,6 +360,19 @@ const Product = () => {
       </div>
 
       <Footer />
+
+      <style jsx>{`
+        @keyframes fadeInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </>
   ) : (
     <Loading />
