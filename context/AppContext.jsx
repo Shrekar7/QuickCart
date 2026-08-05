@@ -13,16 +13,6 @@ export const useAppContext = () => {
   return useContext(AppContext);
 };
 
-// Cart items are keyed as "productId" (no size) or "productId::size" (sized items)
-// so that different sizes of the same product are tracked as separate cart lines.
-export const makeCartKey = (productId, size) =>
-  size ? `${productId}::${size}` : productId;
-
-export const parseCartKey = (key) => {
-  const [productId, size] = key.split("::");
-  return { productId, size: size || null };
-};
-
 export const AppContextProvider = ({ children }) => {
 
   const currency = process.env.NEXT_PUBLIC_CURRENCY;
@@ -80,15 +70,14 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  // Add To Cart — itemId is the product _id, size is optional (pass null/undefined if the product has no sizes)
-  const addToCart = async (itemId, size) => {
-    const key = makeCartKey(itemId, size);
+  // Add To Cart
+  const addToCart = async (itemId) => {
     const cartData = structuredClone(cartItems);
 
-    if (cartData[key]) {
-      cartData[key] += 1;
+    if (cartData[itemId]) {
+      cartData[itemId] += 1;
     } else {
-      cartData[key] = 1;
+      cartData[itemId] = 1;
     }
 
     setCartItems(cartData);
@@ -114,14 +103,14 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  // Update Cart Quantity — key is the cart key (productId or productId::size)
-  const updateCartQuantity = async (key, quantity) => {
+  // Update Cart Quantity
+  const updateCartQuantity = async (itemId, quantity) => {
     const cartData = structuredClone(cartItems);
 
     if (quantity === 0) {
-      delete cartData[key];
+      delete cartData[itemId];
     } else {
-      cartData[key] = quantity;
+      cartData[itemId] = quantity;
     }
 
     setCartItems(cartData);
@@ -149,9 +138,9 @@ export const AppContextProvider = ({ children }) => {
   const getCartCount = () => {
     let totalCount = 0;
 
-    for (const key in cartItems) {
-      if (cartItems[key] > 0) {
-        totalCount += cartItems[key];
+    for (const item in cartItems) {
+      if (cartItems[item] > 0) {
+        totalCount += cartItems[item];
       }
     }
 
@@ -162,14 +151,13 @@ export const AppContextProvider = ({ children }) => {
   const getCartAmount = () => {
     let totalAmount = 0;
 
-    for (const key in cartItems) {
-      const { productId } = parseCartKey(key);
+    for (const item in cartItems) {
       const itemInfo = products.find(
-        (product) => product._id === productId
+        (product) => product._id === item
       );
 
-      if (itemInfo && cartItems[key] > 0) {
-        totalAmount += itemInfo.offerPrice * cartItems[key];
+      if (itemInfo && cartItems[item] > 0) {
+        totalAmount += itemInfo.offerPrice * cartItems[item];
       }
     }
 
