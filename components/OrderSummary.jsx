@@ -70,18 +70,57 @@ const OrderSummary = () => {
         return toast.error("Please select an address");
       }
 
-      let cartItemsArray = Object.keys(cartItems).map((key) => ({
-        product: key,
-        quantity: cartItems[key],
-      }));
+      /*
+       * Convert cart object into order items.
+       *
+       * Your cart currently contains product IDs such as:
+       *
+       * 6a63b70d595ce26df62b34de::S
+       *
+       * MongoDB expects only:
+       *
+       * 6a63b70d595ce26df62b34de
+       *
+       * So we remove anything after "::".
+       */
 
-      cartItemsArray = cartItemsArray.filter(
-        (item) => item.quantity > 0
+      let cartItemsArray = Object.keys(cartItems)
+        .map((key) => {
+          const productId = key.split("::")[0];
+          const quantity = Number(cartItems[key]);
+
+          return {
+            product: productId,
+            quantity,
+          };
+        })
+        .filter((item) => item.quantity > 0);
+
+      // Remove duplicate product IDs if the corrupted cart
+      // happens to contain both ID and ID::S.
+      const mergedItems = {};
+
+      cartItemsArray.forEach((item) => {
+        if (mergedItems[item.product]) {
+          mergedItems[item.product] += item.quantity;
+        } else {
+          mergedItems[item.product] = item.quantity;
+        }
+      });
+
+      cartItemsArray = Object.entries(mergedItems).map(
+        ([product, quantity]) => ({
+          product,
+          quantity,
+        })
       );
 
+      // Check whether cart is actually empty
       if (cartItemsArray.length === 0) {
         return toast.error("Cart is empty");
       }
+
+      console.log("ORDER ITEMS:", cartItemsArray);
 
       const token = await getToken();
 
@@ -100,14 +139,23 @@ const OrderSummary = () => {
 
       if (data.success) {
         toast.success(data.message);
+
+        // Clear frontend cart after successful order
         setCartItems({});
+
         router.push("/order-placed");
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log(error);
-      toast.error(error.message || "Something went wrong");
+      console.log("CREATE ORDER FRONTEND ERROR:", error);
+
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Something went wrong";
+
+      toast.error(message);
     }
   };
 
@@ -147,7 +195,6 @@ const OrderSummary = () => {
           </p>
         </div>
 
-        {/* Small decorative circle */}
         <div className="w-9 h-9 rounded-full bg-[#F5B700]/10 flex items-center justify-center">
           <svg
             width="17"
@@ -537,8 +584,14 @@ const OrderSummary = () => {
       ======================================== */}
 
       <button
+        type="button"
         onClick={createOrder}
-        className="group relative w-full mt-6 py-3.5 rounded-2xl bg-[#8B5CF6] text-white font-semibold shadow-[0_8px_20px_rgba(139,92,246,0.22)] hover:bg-[#7C4DE8] hover:shadow-[0_10px_25px_rgba(139,92,246,0.3)] active:scale-[0.98] transition-all duration-200 overflow-hidden"
+        disabled={getCartCount() === 0}
+        className={`group relative w-full mt-6 py-3.5 rounded-2xl text-white font-semibold transition-all duration-200 overflow-hidden ${
+          getCartCount() === 0
+            ? "bg-gray-300 cursor-not-allowed shadow-none"
+            : "bg-[#8B5CF6] shadow-[0_8px_20px_rgba(139,92,246,0.22)] hover:bg-[#7C4DE8] hover:shadow-[0_10px_25px_rgba(139,92,246,0.3)] active:scale-[0.98]"
+        }`}
       >
         <span className="relative z-10 flex items-center justify-center gap-2">
           Place Order
@@ -548,7 +601,11 @@ const OrderSummary = () => {
             height="17"
             viewBox="0 0 24 24"
             fill="none"
-            className="group-hover:translate-x-1 transition-transform duration-200"
+            className={
+              getCartCount() > 0
+                ? "group-hover:translate-x-1 transition-transform duration-200"
+                : ""
+            }
           >
             <path
               d="M5 12h14M13 6l6 6-6 6"

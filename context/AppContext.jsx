@@ -134,18 +134,17 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  // Cart Count
-  const getCartCount = () => {
-    let totalCount = 0;
 
-    for (const item in cartItems) {
-      if (cartItems[item] > 0) {
-        totalCount += cartItems[item];
-      }
-    }
+// Cart Count
+const getCartCount = () => {
+  if (!cartItems || typeof cartItems !== "object") {
+    return 0;
+  }
 
-    return totalCount;
-  };
+  return Object.values(cartItems).reduce((total, quantity) => {
+    return total + (Number(quantity) > 0 ? Number(quantity) : 0);
+  }, 0);
+};
 
   // Cart Amount
   const getCartAmount = () => {
