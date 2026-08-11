@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
-import Footer from "@/components/seller/Footer";
 import Loading from "@/components/Loading";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -19,6 +18,7 @@ const Orders = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Fetch seller orders
     const fetchSellerOrders = async () => {
         try {
             const token = await getToken();
@@ -39,12 +39,55 @@ const Orders = () => {
             }
         } catch (error) {
             console.error("SELLER ORDERS ERROR:", error);
-            toast.error(error.message);
+
+            toast.error(
+                error.response?.data?.message ||
+                error.message ||
+                "Failed to fetch orders"
+            );
         } finally {
             setLoading(false);
         }
     };
 
+    // Update order status
+    const updateOrderStatus = async (orderId, status) => {
+        try {
+            const token = await getToken();
+
+            const { data } = await axios.post(
+                "/api/order/update-status",
+                {
+                    orderId,
+                    status,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (data.success) {
+                toast.success(data.message);
+
+                // Refresh orders after updating status
+                await fetchSellerOrders();
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            console.error("UPDATE ORDER STATUS ERROR:", error);
+
+            toast.error(
+                error.response?.data?.message ||
+                error.message ||
+                "Failed to update order status"
+            );
+        }
+    };
+
+    // Fetch orders when seller logs in
     useEffect(() => {
         if (user) {
             fetchSellerOrders();
@@ -142,8 +185,8 @@ const Orders = () => {
                                     </p>
 
                                     {/* ORDER INFO */}
-                                    <div>
-                                        <p className="flex flex-col">
+                                    <div className="min-w-44">
+                                        <p className="flex flex-col gap-1">
 
                                             <span>
                                                 Method : COD
@@ -160,12 +203,54 @@ const Orders = () => {
                                                 Payment : Pending
                                             </span>
 
+                                            {/* STATUS */}
                                             <span>
                                                 Status :{" "}
-                                                {order.status}
+                                                <span
+                                                    className={
+                                                        order.status === "Delivered"
+                                                            ? "text-green-600 font-medium"
+                                                            : order.status === "Dispatched"
+                                                            ? "text-blue-600 font-medium"
+                                                            : "text-orange-600 font-medium"
+                                                    }
+                                                >
+                                                    {order.status}
+                                                </span>
                                             </span>
 
                                         </p>
+
+                                        {/* ACTION BUTTONS */}
+
+                                        {order.status === "Order placed" && (
+                                            <button
+                                                onClick={() =>
+                                                    updateOrderStatus(
+                                                        order._id,
+                                                        "Dispatched"
+                                                    )
+                                                }
+                                                className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                                            >
+                                                Dispatch
+                                            </button>
+                                        )}
+
+                                        {order.status === "Dispatched" && (
+                                            <button
+                                                onClick={() =>
+                                                    updateOrderStatus(
+                                                        order._id,
+                                                        "Delivered"
+                                                    )
+                                                }
+                                                className="mt-3 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                                            >
+                                                Mark as Delivered
+                                            </button>
+                                        )}
+
                                     </div>
 
                                 </div>
@@ -177,7 +262,6 @@ const Orders = () => {
                 </div>
             )}
 
-            {/* <Footer /> */}
         </div>
     );
 };

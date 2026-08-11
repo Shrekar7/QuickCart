@@ -15,11 +15,19 @@ const Cart = () => {
     addToCart,
     updateCartQuantity,
     getCartCount,
+    getProductPrice,
   } = useAppContext();
+
+  /* =========================================================
+     CART ENTRIES
+     NOTE: cartItems[itemId] is now { quantity, size } —
+     not a plain number — so we must read .quantity
+  ========================================================= */
 
   const cartEntries = Object.keys(cartItems).filter((itemId) => {
     const product = products.find((p) => p._id === itemId);
-    return product && cartItems[itemId] > 0;
+    const quantity = cartItems[itemId]?.quantity || 0;
+    return product && quantity > 0;
   });
 
   return (
@@ -92,6 +100,17 @@ const Cart = () => {
                   {cartEntries.map((itemId) => {
                     const product = products.find((p) => p._id === itemId);
 
+                    // cartItems[itemId] is { quantity, size }
+                    const cartEntry = cartItems[itemId] || {};
+                    const quantity = Number(cartEntry.quantity) || 0;
+                    const selectedSize = cartEntry.size || null;
+
+                    // Size-aware price (falls back to base offerPrice
+                    // when there's no size or no size-specific price)
+                    const unitPrice = getProductPrice
+                      ? getProductPrice(product, selectedSize)
+                      : Number(product.offerPrice) || 0;
+
                     return (
                       <tr
                         key={itemId}
@@ -109,6 +128,14 @@ const Cart = () => {
                           </div>
                           <div className="text-sm">
                             <p className="text-[#2E1A47] font-medium">{product.name}</p>
+                            {selectedSize && (
+                              <p className="text-xs text-[#5B4B75]/60 mt-0.5">
+                                {product.sizingMode === "age" ? "Age" : "Size"}:{" "}
+                                <span className="font-medium text-[#2E1A47]">
+                                  {selectedSize}
+                                </span>
+                              </p>
+                            )}
                             <button
                               className="text-xs font-medium text-[#E8578E] mt-1.5 hover:underline"
                               onClick={() => updateCartQuantity(product._id, 0)}
@@ -118,13 +145,13 @@ const Cart = () => {
                           </div>
                         </td>
                         <td className="py-5 md:px-5 px-3 text-[#5B4B75]">
-                          {currency}{product.offerPrice}
+                          {currency}{unitPrice}
                         </td>
                         <td className="py-5 md:px-5 px-3">
                           <div className="flex items-center gap-1 bg-[#FAF9FF] border border-[#EDEBFB] rounded-full w-fit px-1 py-1">
                             <button
                               onClick={() =>
-                                updateCartQuantity(product._id, cartItems[itemId] - 1)
+                                updateCartQuantity(product._id, quantity - 1)
                               }
                               className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white transition-colors"
                             >
@@ -139,11 +166,11 @@ const Cart = () => {
                                 updateCartQuantity(product._id, Number(e.target.value))
                               }
                               type="number"
-                              value={cartItems[itemId]}
+                              value={quantity}
                               className="w-8 bg-transparent text-center text-sm font-medium text-[#2E1A47] outline-none appearance-none"
                             />
                             <button
-                              onClick={() => addToCart(product._id)}
+                              onClick={() => addToCart(product._id, selectedSize)}
                               className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white transition-colors"
                             >
                               <Image
@@ -155,7 +182,7 @@ const Cart = () => {
                           </div>
                         </td>
                         <td className="py-5 md:px-5 px-3 text-[#2E1A47] font-semibold">
-                          {currency}{(product.offerPrice * cartItems[itemId]).toFixed(2)}
+                          {currency}{(unitPrice * quantity).toFixed(2)}
                         </td>
                       </tr>
                     );

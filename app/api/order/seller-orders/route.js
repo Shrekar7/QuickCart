@@ -39,7 +39,12 @@ export async function GET(request) {
         Address;
         Product;
 
-        const orders = await Order.find({})
+        // Only show active orders.
+        // Delivered orders remain safely stored in MongoDB
+        // but are removed from the seller's active orders list.
+        const orders = await Order.find({
+            status: { $ne: "Delivered" }
+        })
             .populate("address")
             .populate("items.product")
             .sort({ date: -1 });

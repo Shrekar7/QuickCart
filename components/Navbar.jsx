@@ -1,30 +1,59 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
-import { useClerk, UserButton, useUser } from "@clerk/nextjs";
-import { assets, BagIcon } from "@/assets/assets";
-import { useAppContext } from "@/context/AppContext";
-import { categories } from "@/lib/categories";
+
+import {
+  useClerk,
+  UserButton,
+  useUser,
+} from "@clerk/nextjs";
+
+import {
+  assets,
+  BagIcon,
+} from "@/assets/assets";
+
+import {
+  useAppContext,
+} from "@/context/AppContext";
+
+import {
+  categories,
+} from "@/lib/categories";
 
 // ======================================================
 // ICON BUTTON
 // ======================================================
 
-const IconButton = ({ onClick, children, label, badge }) => (
+const IconButton = ({
+  onClick,
+  children,
+  label,
+  badge,
+}) => (
   <button
+    type="button"
     onClick={onClick}
     aria-label={label}
     className="
       relative
       w-9 h-9
       rounded-full
-      flex items-center justify-center
+      flex
+      items-center
+      justify-center
       text-[#3A3028]
       hover:bg-[#F7F3EC]
-      transition-all duration-200
+      transition-all
+      duration-200
       shrink-0
     "
   >
@@ -33,16 +62,22 @@ const IconButton = ({ onClick, children, label, badge }) => (
     {badge > 0 && (
       <span
         className="
-          absolute -top-0.5 -right-0.5
-          min-w-[17px] h-[17px]
+          absolute
+          -top-0.5
+          -right-0.5
+          min-w-[17px]
+          h-[17px]
           px-1
           rounded-full
           bg-[#D96B7A]
           text-white
           text-[9px]
           font-bold
-          flex items-center justify-center
-          border-2 border-white
+          flex
+          items-center
+          justify-center
+          border-2
+          border-white
         "
       >
         {badge > 99 ? "99+" : badge}
@@ -55,18 +90,21 @@ const IconButton = ({ onClick, children, label, badge }) => (
 // NAV LINK
 // ======================================================
 
-const NavLink = ({ href, children }) => (
+const NavLink = ({
+  href,
+  children,
+}) => (
   <Link
     href={href}
     className="
       relative
+      group/link
       py-2
       text-[13px]
       font-medium
       text-[#4B4038]
       hover:text-[#17130F]
       transition-colors
-      group/link
     "
   >
     {children}
@@ -81,7 +119,8 @@ const NavLink = ({ href, children }) => (
         -translate-x-1/2
         rounded-full
         bg-[#C9973E]
-        transition-all duration-300
+        transition-all
+        duration-300
         group-hover/link:w-4/5
       "
     />
@@ -89,40 +128,98 @@ const NavLink = ({ href, children }) => (
 );
 
 // ======================================================
+// WISHLIST ICON
+// ======================================================
+
+const WishlistIcon = ({
+  size = 18,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+  >
+    <path
+      d="
+        M20.84 4.61
+        a5.5 5.5 0 0 0-7.78 0
+        L12 5.67
+        l-1.06-1.06
+        a5.5 5.5 0 0 0-7.78 7.78
+        L12 21.23
+        l8.84-8.84
+        a5.5 5.5 0 0 0 0-7.78Z
+      "
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+// ======================================================
 // SEARCH BAR
 // ======================================================
 
-const SearchBar = ({ className = "" }) => {
-  const router = useAppContext().router;
+const SearchBar = ({
+  className = "",
+}) => {
+  const {
+    router,
+  } = useAppContext();
 
-  const [query, setQuery] = useState("");
-  const [products, setProducts] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [query, setQuery] =
+    useState("");
 
-  const searchRef = useRef(null);
+  const [products, setProducts] =
+    useState([]);
+
+  const [suggestions, setSuggestions] =
+    useState([]);
+
+  const [
+    showSuggestions,
+    setShowSuggestions,
+  ] = useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const searchRef =
+    useRef(null);
 
   // ------------------------------------------------------
   // FETCH PRODUCTS
   // ------------------------------------------------------
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
+    const fetchProducts =
+      async () => {
+        try {
+          setLoading(true);
 
-        const { data } = await axios.get("/api/product/list");
+          const { data } =
+            await axios.get(
+              "/api/product/list"
+            );
 
-        if (data.success) {
-          setProducts(data.products);
+          if (data.success) {
+            setProducts(
+              data.products || []
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Search products error:",
+            error
+          );
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Search products error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
     fetchProducts();
   }, []);
@@ -132,16 +229,22 @@ const SearchBar = ({ className = "" }) => {
   // ------------------------------------------------------
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target)
-      ) {
-        setShowSuggestions(false);
-      }
-    };
+    const handleClickOutside =
+      (event) => {
+        if (
+          searchRef.current &&
+          !searchRef.current.contains(
+            event.target
+          )
+        ) {
+          setShowSuggestions(false);
+        }
+      };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
 
     return () => {
       document.removeEventListener(
@@ -156,7 +259,8 @@ const SearchBar = ({ className = "" }) => {
   // ------------------------------------------------------
 
   useEffect(() => {
-    const trimmedQuery = query.trim().toLowerCase();
+    const trimmedQuery =
+      query.trim().toLowerCase();
 
     if (!trimmedQuery) {
       setSuggestions([]);
@@ -164,13 +268,19 @@ const SearchBar = ({ className = "" }) => {
       return;
     }
 
-    const filteredProducts = products
-      .filter((product) =>
-        product.name?.toLowerCase().includes(trimmedQuery)
-      )
-      .slice(0, 6);
+    const filteredProducts =
+      products
+        .filter((product) =>
+          product.name
+            ?.toLowerCase()
+            .includes(trimmedQuery)
+        )
+        .slice(0, 6);
 
-    setSuggestions(filteredProducts);
+    setSuggestions(
+      filteredProducts
+    );
+
     setShowSuggestions(true);
   }, [query, products]);
 
@@ -180,7 +290,8 @@ const SearchBar = ({ className = "" }) => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      const trimmedQuery = query.trim();
+      const trimmedQuery =
+        query.trim();
 
       if (!trimmedQuery) return;
 
@@ -202,12 +313,15 @@ const SearchBar = ({ className = "" }) => {
   // PRODUCT CLICK
   // ------------------------------------------------------
 
-  const handleProductClick = (productId) => {
-    setQuery("");
-    setShowSuggestions(false);
+  const handleProductClick =
+    (productId) => {
+      setQuery("");
+      setShowSuggestions(false);
 
-    router.push(`/product/${productId}`);
-  };
+      router.push(
+        `/product/${productId}`
+      );
+    };
 
   return (
     <div
@@ -251,7 +365,9 @@ const SearchBar = ({ className = "" }) => {
       <input
         type="text"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) =>
+          setQuery(e.target.value)
+        }
         onFocus={() => {
           if (query.trim()) {
             setShowSuggestions(true);
@@ -267,245 +383,317 @@ const SearchBar = ({ className = "" }) => {
           py-2.5
           rounded-full
           bg-[#F8F6F2]
-          border border-transparent
+          border
+          border-transparent
           outline-none
           text-[13px]
           text-[#29231E]
           placeholder:text-[#8C8379]
-          transition-all duration-300
+          transition-all
+          duration-300
           focus:bg-white
           focus:border-[#D8C7A8]
           focus:shadow-[0_4px_18px_rgba(80,60,30,0.06)]
         "
       />
 
-      {/* ==================================================
-          SUGGESTIONS
-      ================================================== */}
+      {/* SUGGESTIONS */}
 
-      {showSuggestions && query.trim() && (
-        <div
-          className="
-            absolute
-            top-[calc(100%+9px)]
-            left-0
-            w-full
-            min-w-[290px]
-            md:min-w-[350px]
-            bg-white
-            border border-[#EAE5DC]
-            rounded-2xl
-            shadow-[0_18px_50px_rgba(50,40,25,0.12)]
-            overflow-hidden
-            z-[100]
-          "
-        >
-          {/* LOADING */}
+      {showSuggestions &&
+        query.trim() && (
+          <div
+            className="
+              absolute
+              top-[calc(100%+9px)]
+              left-0
+              w-full
+              min-w-[290px]
+              md:min-w-[350px]
+              bg-white
+              border
+              border-[#EAE5DC]
+              rounded-2xl
+              shadow-[0_18px_50px_rgba(50,40,25,0.12)]
+              overflow-hidden
+              z-[100]
+            "
+          >
+            {/* LOADING */}
 
-          {loading && (
-            <div className="px-4 py-5 text-sm text-[#756B61] text-center">
-              Searching...
-            </div>
-          )}
-
-          {/* RESULTS */}
-
-          {!loading && suggestions.length > 0 && (
-            <div className="py-2">
+            {loading && (
               <div
                 className="
                   px-4
-                  py-2
-                  text-[10px]
-                  uppercase
-                  tracking-[0.18em]
-                  font-semibold
-                  text-[#9A9187]
+                  py-5
+                  text-sm
+                  text-[#756B61]
+                  text-center
                 "
               >
-                Products
+                Searching...
               </div>
+            )}
 
-              {suggestions.map((product) => (
-                <button
-                  key={product._id}
-                  type="button"
-                  onClick={() =>
-                    handleProductClick(product._id)
-                  }
-                  className="
-                    w-full
-                    flex
-                    items-center
-                    gap-3
-                    px-4
-                    py-3
-                    text-left
-                    hover:bg-[#FAF8F4]
-                    transition-colors
-                    group
-                  "
-                >
-                  {/* IMAGE */}
+            {/* RESULTS */}
+
+            {!loading &&
+              suggestions.length >
+                0 && (
+                <div className="py-2">
+                  <div
+                    className="
+                      px-4
+                      py-2
+                      text-[10px]
+                      uppercase
+                      tracking-[0.18em]
+                      font-semibold
+                      text-[#9A9187]
+                    "
+                  >
+                    Products
+                  </div>
+
+                  {suggestions.map(
+                    (product) => (
+                      <button
+                        key={product._id}
+                        type="button"
+                        onClick={() =>
+                          handleProductClick(
+                            product._id
+                          )
+                        }
+                        className="
+                          w-full
+                          flex
+                          items-center
+                          gap-3
+                          px-4
+                          py-3
+                          text-left
+                          hover:bg-[#FAF8F4]
+                          transition-colors
+                          group
+                        "
+                      >
+                        {/* IMAGE */}
+
+                        <div
+                          className="
+                            w-11
+                            h-11
+                            rounded-xl
+                            bg-[#F8F6F2]
+                            border
+                            border-[#EEE9E0]
+                            flex
+                            items-center
+                            justify-center
+                            overflow-hidden
+                            shrink-0
+                          "
+                        >
+                          {product.image?.[0] ? (
+                            <Image
+                              src={
+                                product.image[0]
+                              }
+                              alt={
+                                product.name
+                              }
+                              width={44}
+                              height={44}
+                              className="
+                                w-full
+                                h-full
+                                object-cover
+                              "
+                            />
+                          ) : (
+                            <span
+                              className="
+                                text-xs
+                                text-[#9A9187]
+                              "
+                            >
+                              IMG
+                            </span>
+                          )}
+                        </div>
+
+                        {/* INFO */}
+
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className="
+                              text-[13px]
+                              font-medium
+                              text-[#302921]
+                              truncate
+                              group-hover:text-[#B27B27]
+                              transition-colors
+                            "
+                          >
+                            {
+                              product.name
+                            }
+                          </p>
+
+                          <p
+                            className="
+                              text-[11px]
+                              text-[#958B80]
+                              mt-0.5
+                            "
+                          >
+                            {
+                              product.category
+                            }
+                          </p>
+                        </div>
+
+                        {/* ARROW */}
+
+                        <svg
+                          width="15"
+                          height="15"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          className="
+                            shrink-0
+                            text-[#A49B91]
+                            opacity-40
+                            group-hover:opacity-100
+                            group-hover:translate-x-0.5
+                            transition-all
+                          "
+                        >
+                          <path
+                            d="M9 18l6-6-6-6"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    )
+                  )}
+
+                  {/* ALL RESULTS */}
 
                   <div
                     className="
-                      w-11
-                      h-11
-                      rounded-xl
-                      bg-[#F8F6F2]
-                      border border-[#EEE9E0]
-                      flex items-center justify-center
-                      overflow-hidden
-                      shrink-0
+                      border-t
+                      border-[#EEE9E0]
+                      mt-1
                     "
                   >
-                    {product.image?.[0] ? (
-                      <Image
-                        src={product.image[0]}
-                        alt={product.name}
-                        width={44}
-                        height={44}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xs text-[#9A9187]">
-                        IMG
-                      </span>
-                    )}
-                  </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSuggestions(
+                          false
+                        );
 
-                  {/* INFO */}
-
-                  <div className="min-w-0 flex-1">
-                    <p
+                        router.push(
+                          `/all-products?search=${encodeURIComponent(
+                            query.trim()
+                          )}`
+                        );
+                      }}
                       className="
-                        text-[13px]
+                        w-full
+                        px-4
+                        py-3
+                        text-[12px]
                         font-medium
-                        text-[#302921]
-                        truncate
-                        group-hover:text-[#B27B27]
+                        text-[#B27B27]
+                        text-center
+                        hover:bg-[#FAF8F4]
                         transition-colors
                       "
                     >
-                      {product.name}
-                    </p>
-
-                    <p className="text-[11px] text-[#958B80] mt-0.5">
-                      {product.category}
-                    </p>
+                      View all results for "
+                      {query}"
+                    </button>
                   </div>
+                </div>
+              )}
 
-                  {/* ARROW */}
+            {/* NO RESULTS */}
 
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="
-                      shrink-0
-                      text-[#A49B91]
-                      opacity-40
-                      group-hover:opacity-100
-                      group-hover:translate-x-0.5
-                      transition-all
-                    "
-                  >
-                    <path
-                      d="M9 18l6-6-6-6"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              ))}
-
-              {/* ALL RESULTS */}
-
-              <div className="border-t border-[#EEE9E0] mt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowSuggestions(false);
-
-                    router.push(
-                      `/all-products?search=${encodeURIComponent(
-                        query.trim()
-                      )}`
-                    );
-                  }}
+            {!loading &&
+              suggestions.length ===
+                0 && (
+                <div
                   className="
-                    w-full
-                    px-4
-                    py-3
-                    text-[12px]
-                    font-medium
-                    text-[#B27B27]
+                    px-5
+                    py-7
                     text-center
-                    hover:bg-[#FAF8F4]
-                    transition-colors
                   "
                 >
-                  View all results for "{query}"
-                </button>
-              </div>
-            </div>
-          )}
+                  <div
+                    className="
+                      w-10
+                      h-10
+                      mx-auto
+                      mb-3
+                      rounded-full
+                      bg-[#F8F6F2]
+                      flex
+                      items-center
+                      justify-center
+                    "
+                  >
+                    <svg
+                      width="17"
+                      height="17"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        cx="11"
+                        cy="11"
+                        r="7"
+                        stroke="#958B80"
+                        strokeWidth="1.8"
+                      />
 
-          {/* NO RESULTS */}
+                      <path
+                        d="M21 21l-3.5-3.5"
+                        stroke="#958B80"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
 
-          {!loading && suggestions.length === 0 && (
-            <div className="px-5 py-7 text-center">
-              <div
-                className="
-                  w-10
-                  h-10
-                  mx-auto
-                  mb-3
-                  rounded-full
-                  bg-[#F8F6F2]
-                  flex
-                  items-center
-                  justify-center
-                "
-              >
-                <svg
-                  width="17"
-                  height="17"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <circle
-                    cx="11"
-                    cy="11"
-                    r="7"
-                    stroke="#958B80"
-                    strokeWidth="1.8"
-                  />
+                  <p
+                    className="
+                      text-[13px]
+                      font-medium
+                      text-[#302921]
+                    "
+                  >
+                    No products found
+                  </p>
 
-                  <path
-                    d="M21 21l-3.5-3.5"
-                    stroke="#958B80"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-
-              <p className="text-[13px] font-medium text-[#302921]">
-                No products found
-              </p>
-
-              <p className="text-[11px] text-[#958B80] mt-1">
-                Try searching for something else
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+                  <p
+                    className="
+                      text-[11px]
+                      text-[#958B80]
+                      mt-1
+                    "
+                  >
+                    Try searching for
+                    something else
+                  </p>
+                </div>
+              )}
+          </div>
+        )}
     </div>
   );
 };
@@ -515,24 +703,36 @@ const SearchBar = ({ className = "" }) => {
 // ======================================================
 
 const Navbar = () => {
-  const { isSeller, router, getCartCount } =
-    useAppContext();
+  const {
+    isSeller,
+    router,
+    getCartCount,
+    wishlist,
+  } = useAppContext();
 
-  const { openSignIn } = useClerk();
-  const { isSignedIn } = useUser();
+  const {
+    openSignIn,
+  } = useClerk();
 
-  const cartCount = getCartCount();
+  const {
+    isSignedIn,
+  } = useUser();
+
+  const cartCount =
+    getCartCount();
+
+  const wishlistCount =
+    wishlist?.length || 0;
 
   return (
     <nav
       className="
-        sticky
-        top-0
-        z-40
         w-full
-        bg-[#FFFDF9]/95
-        backdrop-blur-xl
-        border-b border-[#EAE4DA]
+        bg-white
+        border-b
+        border-[#EEE9E0]
+        relative
+        z-50
       "
     >
       {/* =================================================
@@ -554,9 +754,7 @@ const Navbar = () => {
           gap-5
         "
       >
-        {/* =================================================
-            LOGO
-        ================================================= */}
+        {/* LOGO */}
 
         <Link
           href="/"
@@ -598,12 +796,15 @@ const Navbar = () => {
             text-sm
           "
         >
-          <NavLink href="/">Home</NavLink>
+          <NavLink href="/">
+            Home
+          </NavLink>
 
           {/* CATEGORIES */}
 
           <div className="relative group">
             <button
+              type="button"
               className="
                 flex
                 items-center
@@ -658,7 +859,8 @@ const Navbar = () => {
                 className="
                   w-64
                   rounded-2xl
-                  border border-[#EAE4DA]
+                  border
+                  border-[#EAE4DA]
                   bg-white
                   shadow-[0_20px_55px_rgba(50,40,25,0.13)]
                   overflow-hidden
@@ -679,37 +881,39 @@ const Navbar = () => {
                   Shop by category
                 </div>
 
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.slug}
-                    href={`/category/${cat.slug}`}
-                    className="
-                      flex
-                      items-center
-                      gap-3
-                      px-3
-                      py-2.5
-                      rounded-xl
-                      text-[13px]
-                      text-[#51463C]
-                      hover:bg-[#FAF7F1]
-                      hover:text-[#A97124]
-                      transition-all
-                    "
-                  >
-                    <span
+                {categories.map(
+                  (cat) => (
+                    <Link
+                      key={cat.slug}
+                      href={`/category/${cat.slug}`}
                       className="
-                        w-1.5
-                        h-1.5
-                        rounded-full
-                        bg-[#C9973E]
-                        shrink-0
+                        flex
+                        items-center
+                        gap-3
+                        px-3
+                        py-2.5
+                        rounded-xl
+                        text-[13px]
+                        text-[#51463C]
+                        hover:bg-[#FAF7F1]
+                        hover:text-[#A97124]
+                        transition-all
                       "
-                    />
+                    >
+                      <span
+                        className="
+                          w-1.5
+                          h-1.5
+                          rounded-full
+                          bg-[#C9973E]
+                          shrink-0
+                        "
+                      />
 
-                    {cat.label}
-                  </Link>
-                ))}
+                      {cat.label}
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           </div>
@@ -730,13 +934,19 @@ const Navbar = () => {
 
           {isSeller && (
             <button
-              onClick={() => router.push("/seller")}
+              type="button"
+              onClick={() =>
+                router.push(
+                  "/seller"
+                )
+              }
               className="
                 ml-1
                 px-3.5
                 py-1.5
                 rounded-full
-                border border-[#D8C7A8]
+                border
+                border-[#D8C7A8]
                 text-[10px]
                 font-bold
                 uppercase
@@ -753,7 +963,7 @@ const Navbar = () => {
         </div>
 
         {/* =================================================
-            RIGHT SIDE
+            DESKTOP RIGHT SIDE
         ================================================= */}
 
         <div
@@ -779,12 +989,37 @@ const Navbar = () => {
 
           {/* DIVIDER */}
 
-          <div className="w-px h-6 bg-[#E5DED3] mx-2" />
+          <div
+            className="
+              w-px
+              h-6
+              bg-[#E5DED3]
+              mx-2
+            "
+          />
+
+          {/* WISHLIST */}
+
+          <IconButton
+            onClick={() =>
+              router.push(
+                "/wishlist"
+              )
+            }
+            label="Wishlist"
+            badge={wishlistCount}
+          >
+            <WishlistIcon
+              size={18}
+            />
+          </IconButton>
 
           {/* CART */}
 
           <IconButton
-            onClick={() => router.push("/cart")}
+            onClick={() =>
+              router.push("/cart")
+            }
             label="Cart"
             badge={cartCount}
           >
@@ -799,7 +1034,11 @@ const Navbar = () => {
           {/* ORDERS */}
 
           <IconButton
-            onClick={() => router.push("/my-orders")}
+            onClick={() =>
+              router.push(
+                "/my-orders"
+              )
+            }
             label="My orders"
           >
             <BagIcon />
@@ -809,11 +1048,16 @@ const Navbar = () => {
 
           {isSignedIn ? (
             <div className="ml-1">
-              <UserButton afterSignOutUrl="/" />
+              <UserButton
+                afterSignOutUrl="/"
+              />
             </div>
           ) : (
             <button
-              onClick={() => openSignIn()}
+              type="button"
+              onClick={() =>
+                openSignIn()
+              }
               className="
                 ml-1
                 flex
@@ -860,14 +1104,20 @@ const Navbar = () => {
 
           {isSeller && (
             <button
-              onClick={() => router.push("/seller")}
+              type="button"
+              onClick={() =>
+                router.push(
+                  "/seller"
+                )
+              }
               aria-label="Seller Dashboard"
               className="
                 px-2.5
                 py-1.5
                 mr-0.5
                 rounded-full
-                border border-[#D8C7A8]
+                border
+                border-[#D8C7A8]
                 text-[9px]
                 font-bold
                 uppercase
@@ -881,10 +1131,28 @@ const Navbar = () => {
             </button>
           )}
 
+          {/* WISHLIST */}
+
+          <IconButton
+            onClick={() =>
+              router.push(
+                "/wishlist"
+              )
+            }
+            label="Wishlist"
+            badge={wishlistCount}
+          >
+            <WishlistIcon
+              size={19}
+            />
+          </IconButton>
+
           {/* CART */}
 
           <IconButton
-            onClick={() => router.push("/cart")}
+            onClick={() =>
+              router.push("/cart")
+            }
             label="Cart"
             badge={cartCount}
           >
@@ -899,7 +1167,11 @@ const Navbar = () => {
           {/* ORDERS */}
 
           <IconButton
-            onClick={() => router.push("/my-orders")}
+            onClick={() =>
+              router.push(
+                "/my-orders"
+              )
+            }
             label="My orders"
           >
             <BagIcon />
@@ -908,10 +1180,14 @@ const Navbar = () => {
           {/* ACCOUNT */}
 
           {isSignedIn ? (
-            <UserButton afterSignOutUrl="/" />
+            <UserButton
+              afterSignOutUrl="/"
+            />
           ) : (
             <IconButton
-              onClick={() => openSignIn()}
+              onClick={() =>
+                openSignIn()
+              }
               label="Sign in"
             >
               <Image
@@ -944,3 +1220,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
