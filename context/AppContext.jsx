@@ -18,6 +18,9 @@ export const useAppContext = () => {
 };
 
 export const AppContextProvider = ({ children }) => {
+    // =====================================================
+    // GENERAL
+    // =====================================================
 
     const currency =
         process.env.NEXT_PUBLIC_CURRENCY || "₹";
@@ -27,38 +30,34 @@ export const AppContextProvider = ({ children }) => {
     const { user } = useUser();
     const { getToken } = useAuth();
 
+    // =====================================================
+    // PRODUCTS
+    // =====================================================
+
     const [products, setProducts] = useState([]);
 
-    const [userData, setUserData] =
-        useState(null);
+    // =====================================================
+    // USER
+    // =====================================================
 
-    const [isSeller, setIsSeller] =
-        useState(false);
+    const [userData, setUserData] = useState(null);
+    const [isSeller, setIsSeller] = useState(false);
 
-    const [cartItems, setCartItems] =
-        useState({});
+    // =====================================================
+    // CART
+    // =====================================================
+
+    const [cartItems, setCartItems] = useState({});
 
     // =====================================================
     // WISHLIST
     // =====================================================
 
-    const [wishlist, setWishlist] =
-        useState([]);
+    const [wishlist, setWishlist] = useState([]);
 
     // =====================================================
     // NEW ARRIVALS
     // =====================================================
-
-    /*
-        Products are already returned from the API
-        with a "date" field.
-
-        Newest products will have the
-        highest/latest date.
-
-        We create a separate array so that
-        the original products array is not modified.
-    */
 
     const newArrivals = [...products]
         .sort(
@@ -79,9 +78,7 @@ export const AppContextProvider = ({ children }) => {
             );
 
             if (data.success) {
-                setProducts(
-                    data.products || []
-                );
+                setProducts(data.products || []);
             } else {
                 toast.error(
                     data.message ||
@@ -90,7 +87,7 @@ export const AppContextProvider = ({ children }) => {
             }
         } catch (error) {
             console.error(
-                "Fetch products error:",
+                "FETCH PRODUCTS ERROR:",
                 error
             );
 
@@ -110,124 +107,143 @@ export const AppContextProvider = ({ children }) => {
         try {
             if (!user) return;
 
+            // -------------------------------------------------
+            // CHECK SELLER
+            // -------------------------------------------------
+
             setIsSeller(
                 user.publicMetadata?.role ===
                     "seller"
             );
 
-            const token =
-                await getToken();
+            const token = await getToken();
 
             if (!token) return;
 
-            const { data } =
-                await axios.get(
-                    "/api/user/data",
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
-                    }
+            const { data } = await axios.get(
+                "/api/user/data",
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!data.success) {
+                toast.error(
+                    data.message ||
+                        "Failed to load user data"
                 );
 
-            if (data.success) {
-                setUserData(
-                    data.user
-                );
+                return;
+            }
 
-                // =================================================
-                // CART
-                // =================================================
+            // -------------------------------------------------
+            // USER DATA
+            // -------------------------------------------------
 
-                const existingCart =
-                    data.user?.CartItems ||
-                    {};
+            setUserData(data.user);
 
-                const convertedCart = {};
+            // -------------------------------------------------
+            // CART FROM DATABASE
+            // -------------------------------------------------
 
-                Object.entries(
-                    existingCart
-                ).forEach(
-                    ([itemId, value]) => {
+            const existingCart =
+                data.user?.CartItems || {};
 
-                        // Old format
-                        if (
-                            typeof value ===
-                                "number" ||
-                            typeof value ===
-                                "string"
-                        ) {
+            const convertedCart = {};
+
+            Object.entries(
+                existingCart
+            ).forEach(
+                ([itemId, value]) => {
+                    // -----------------------------------------
+                    // OLD CART FORMAT
+                    // Example:
+                    // "productId": 2
+                    // -----------------------------------------
+
+                    if (
+                        typeof value ===
+                            "number" ||
+                        typeof value ===
+                            "string"
+                    ) {
+                        const quantity =
+                            Number(value);
+
+                        if (quantity > 0) {
                             convertedCart[
                                 itemId
                             ] = {
-                                quantity:
-                                    Number(
-                                        value
-                                    ),
+                                quantity,
                                 size: null,
                             };
                         }
 
-                        // New format
-                        else if (
-                            value &&
-                            typeof value ===
-                                "object"
-                        ) {
+                        return;
+                    }
+
+                    // -----------------------------------------
+                    // NEW CART FORMAT
+                    // Example:
+                    // "productId": {
+                    //     quantity: 2,
+                    //     size: "M"
+                    // }
+                    // -----------------------------------------
+
+                    if (
+                        value &&
+                        typeof value ===
+                            "object"
+                    ) {
+                        const quantity =
+                            Number(
+                                value.quantity
+                            ) || 0;
+
+                        if (quantity > 0) {
                             convertedCart[
                                 itemId
                             ] = {
-                                quantity:
-                                    Number(
-                                        value.quantity
-                                    ) || 0,
-
+                                quantity,
                                 size:
                                     value.size ||
                                     null,
                             };
                         }
                     }
-                );
+                }
+            );
 
-                setCartItems(
-                    convertedCart
-                );
+            setCartItems(
+                convertedCart
+            );
 
-                // =================================================
-                // WISHLIST
-                // =================================================
+            // -------------------------------------------------
+            // WISHLIST
+            // -------------------------------------------------
 
-                const existingWishlist =
-                    Array.isArray(
-                        data.user?.Wishlist
-                    )
-                        ? data.user.Wishlist
-                        : [];
+            const existingWishlist =
+                Array.isArray(
+                    data.user?.Wishlist
+                )
+                    ? data.user.Wishlist
+                    : [];
 
-                setWishlist(
-                    existingWishlist.map(
-                        String
-                    )
-                );
-
-            } else {
-                toast.error(
-                    data.message ||
-                        "Failed to load user data"
-                );
-            }
-
+            setWishlist(
+                existingWishlist.map(String)
+            );
         } catch (error) {
             console.error(
-                "Fetch user data error:",
+                "FETCH USER DATA ERROR:",
                 error
             );
 
             toast.error(
-                error?.response?.data
-                    ?.message ||
+                error?.response?.data?.message ||
                     error?.message ||
                     "Failed to load user data"
             );
@@ -241,46 +257,58 @@ export const AppContextProvider = ({ children }) => {
     const saveCartToDatabase = async (
         cartData
     ) => {
-
-        if (!user) return;
+        if (!user) {
+            return false;
+        }
 
         try {
-            const token =
-                await getToken();
+            const token = await getToken();
 
             if (!token) {
                 toast.error(
                     "Please login again"
                 );
 
-                return;
+                return false;
             }
 
-            await axios.post(
-                "/api/cart/update",
-                {
-                    cartData,
-                },
-                {
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`,
+            const { data } =
+                await axios.post(
+                    "/api/cart/update",
+                    {
+                        cartData,
                     },
-                }
-            );
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`,
+                        },
+                    }
+                );
 
+            if (!data.success) {
+                toast.error(
+                    data.message ||
+                        "Failed to save cart"
+                );
+
+                return false;
+            }
+
+            return true;
         } catch (error) {
             console.error(
-                "Save cart error:",
+                "SAVE CART ERROR:",
                 error
             );
 
             toast.error(
-                error?.response?.data
-                    ?.message ||
+                error?.response?.data?.message ||
                     error?.message ||
                     "Failed to save cart"
             );
+
+            return false;
         }
     };
 
@@ -292,57 +320,80 @@ export const AppContextProvider = ({ children }) => {
         itemId,
         selectedSize = null
     ) => {
-
         if (!itemId) {
             toast.error(
                 "Invalid product"
             );
 
-            return;
+            return false;
         }
+
+        const cleanItemId =
+            String(itemId).split("::")[0];
 
         const cartData = {
             ...(cartItems || {}),
         };
 
-        if (cartData[itemId]) {
+        // =================================================
+        // ITEM ALREADY EXISTS
+        // =================================================
 
-            cartData[itemId] = {
+        if (cartData[cleanItemId]) {
+            cartData[cleanItemId] = {
                 quantity:
                     Number(
-                        cartData[itemId]
-                            .quantity
+                        cartData[
+                            cleanItemId
+                        ]?.quantity
                     ) + 1,
 
                 size:
                     selectedSize ||
-                    cartData[itemId]
-                        .size ||
+                    cartData[
+                        cleanItemId
+                    ]?.size ||
                     null,
             };
+        }
 
-        } else {
+        // =================================================
+        // NEW ITEM
+        // =================================================
 
-            cartData[itemId] = {
+        else {
+            cartData[cleanItemId] = {
                 quantity: 1,
-
                 size:
                     selectedSize ||
                     null,
             };
         }
 
-        setCartItems(
-            cartData
-        );
+        // =================================================
+        // UPDATE UI IMMEDIATELY
+        // =================================================
 
-        await saveCartToDatabase(
-            cartData
-        );
+        setCartItems(cartData);
+
+        // =================================================
+        // SAVE TO DATABASE
+        // =================================================
+
+        const saved =
+            await saveCartToDatabase(
+                cartData
+            );
+
+        if (!saved) {
+            return false;
+        }
 
         toast.success(
             "Item added to cart"
         );
+
+        return true;
     };
 
     // =====================================================
@@ -353,8 +404,10 @@ export const AppContextProvider = ({ children }) => {
         itemId,
         quantity
     ) => {
+        if (!itemId) return false;
 
-        if (!itemId) return;
+        const cleanItemId =
+            String(itemId).split("::")[0];
 
         const cartData = {
             ...(cartItems || {}),
@@ -363,16 +416,28 @@ export const AppContextProvider = ({ children }) => {
         const newQuantity =
             Number(quantity);
 
-        if (newQuantity <= 0) {
+        // =================================================
+        // REMOVE ITEM
+        // =================================================
 
-            delete cartData[itemId];
+        if (
+            !Number.isFinite(newQuantity) ||
+            newQuantity <= 0
+        ) {
+            delete cartData[cleanItemId];
+        }
 
-        } else {
+        // =================================================
+        // UPDATE QUANTITY
+        // =================================================
 
+        else {
             const existingItem =
-                cartData[itemId];
+                cartData[
+                    cleanItemId
+                ];
 
-            cartData[itemId] = {
+            cartData[cleanItemId] = {
                 quantity:
                     newQuantity,
 
@@ -382,13 +447,22 @@ export const AppContextProvider = ({ children }) => {
             };
         }
 
-        setCartItems(
-            cartData
-        );
+        // =================================================
+        // UPDATE UI
+        // =================================================
 
-        await saveCartToDatabase(
-            cartData
-        );
+        setCartItems(cartData);
+
+        // =================================================
+        // SAVE DATABASE
+        // =================================================
+
+        const saved =
+            await saveCartToDatabase(
+                cartData
+            );
+
+        return saved;
     };
 
     // =====================================================
@@ -399,21 +473,27 @@ export const AppContextProvider = ({ children }) => {
         itemId,
         selectedSize
     ) => {
+        if (!itemId) return false;
 
-        if (!itemId) return;
+        const cleanItemId =
+            String(itemId).split("::")[0];
 
         const cartData = {
             ...(cartItems || {}),
         };
 
-        if (!cartData[itemId])
-            return;
+        if (
+            !cartData[cleanItemId]
+        ) {
+            return false;
+        }
 
-        cartData[itemId] = {
+        cartData[cleanItemId] = {
             quantity:
                 Number(
-                    cartData[itemId]
-                        .quantity
+                    cartData[
+                        cleanItemId
+                    ]?.quantity
                 ) || 1,
 
             size:
@@ -421,13 +501,22 @@ export const AppContextProvider = ({ children }) => {
                 null,
         };
 
-        setCartItems(
-            cartData
-        );
+        // =================================================
+        // UPDATE UI
+        // =================================================
 
-        await saveCartToDatabase(
-            cartData
-        );
+        setCartItems(cartData);
+
+        // =================================================
+        // SAVE DATABASE
+        // =================================================
+
+        const saved =
+            await saveCartToDatabase(
+                cartData
+            );
+
+        return saved;
     };
 
     // =====================================================
@@ -435,7 +524,6 @@ export const AppContextProvider = ({ children }) => {
     // =====================================================
 
     const getCartCount = () => {
-
         if (
             !cartItems ||
             typeof cartItems !==
@@ -448,17 +536,16 @@ export const AppContextProvider = ({ children }) => {
             cartItems
         ).reduce(
             (total, item) => {
-
+                // New format
                 if (
                     item &&
                     typeof item ===
                         "object"
                 ) {
-
                     const quantity =
                         Number(
                             item.quantity
-                        );
+                        ) || 0;
 
                     return (
                         total +
@@ -468,8 +555,9 @@ export const AppContextProvider = ({ children }) => {
                     );
                 }
 
+                // Old format
                 const quantity =
-                    Number(item);
+                    Number(item) || 0;
 
                 return (
                     total +
@@ -487,7 +575,6 @@ export const AppContextProvider = ({ children }) => {
     // =====================================================
 
     const getCartAmount = () => {
-
         let totalAmount = 0;
 
         if (
@@ -501,6 +588,8 @@ export const AppContextProvider = ({ children }) => {
         for (
             const itemId in cartItems
         ) {
+            const cleanItemId =
+                String(itemId).split("::")[0];
 
             const cartItem =
                 cartItems[itemId];
@@ -511,22 +600,28 @@ export const AppContextProvider = ({ children }) => {
                         String(
                             product._id
                         ) ===
-                        String(itemId)
+                        String(
+                            cleanItemId
+                        )
                 );
 
-            if (!itemInfo)
+            // Product doesn't exist
+            if (!itemInfo) {
                 continue;
+            }
 
             let quantity = 0;
-            let selectedSize =
-                null;
+            let selectedSize = null;
+
+            // =================================================
+            // NEW FORMAT
+            // =================================================
 
             if (
                 cartItem &&
                 typeof cartItem ===
                     "object"
             ) {
-
                 quantity =
                     Number(
                         cartItem.quantity
@@ -535,42 +630,51 @@ export const AppContextProvider = ({ children }) => {
                 selectedSize =
                     cartItem.size ||
                     null;
+            }
 
-            } else {
+            // =================================================
+            // OLD FORMAT
+            // =================================================
 
+            else {
                 quantity =
                     Number(
                         cartItem
                     ) || 0;
             }
 
-            if (quantity <= 0)
+            if (quantity <= 0) {
                 continue;
+            }
+
+            // =================================================
+            // DEFAULT PRODUCT PRICE
+            // =================================================
 
             let finalPrice =
                 Number(
                     itemInfo.offerPrice
                 ) || 0;
 
+            // =================================================
+            // SIZE PRICE
+            // =================================================
+
             if (
                 selectedSize &&
                 itemInfo.sizePrices
             ) {
-
                 let sizePrice;
 
                 if (
                     itemInfo.sizePrices
                         instanceof Map
                 ) {
-
                     sizePrice =
                         itemInfo.sizePrices.get(
                             selectedSize
                         );
-
                 } else {
-
                     sizePrice =
                         itemInfo
                             .sizePrices[
@@ -584,7 +688,6 @@ export const AppContextProvider = ({ children }) => {
                     sizePrice !==
                         null
                 ) {
-
                     finalPrice =
                         Number(
                             sizePrice
@@ -613,9 +716,7 @@ export const AppContextProvider = ({ children }) => {
         product,
         selectedSize = null
     ) => {
-
-        if (!product)
-            return 0;
+        if (!product) return 0;
 
         let finalPrice =
             Number(
@@ -626,21 +727,17 @@ export const AppContextProvider = ({ children }) => {
             selectedSize &&
             product.sizePrices
         ) {
-
             let sizePrice;
 
             if (
                 product.sizePrices
                     instanceof Map
             ) {
-
                 sizePrice =
                     product.sizePrices.get(
                         selectedSize
                     );
-
             } else {
-
                 sizePrice =
                     product.sizePrices[
                         selectedSize
@@ -653,7 +750,6 @@ export const AppContextProvider = ({ children }) => {
                 sizePrice !==
                     null
             ) {
-
                 finalPrice =
                     Number(
                         sizePrice
@@ -673,9 +769,7 @@ export const AppContextProvider = ({ children }) => {
         product,
         selectedSize = null
     ) => {
-
-        if (!product)
-            return 0;
+        if (!product) return 0;
 
         return (
             Number(
@@ -690,17 +784,15 @@ export const AppContextProvider = ({ children }) => {
 
     const saveWishlistToDatabase =
         async (wishlistData) => {
-
-            if (!user)
+            if (!user) {
                 return false;
+            }
 
             try {
-
                 const token =
                     await getToken();
 
                 if (!token) {
-
                     toast.error(
                         "Please login again"
                     );
@@ -724,7 +816,6 @@ export const AppContextProvider = ({ children }) => {
                     );
 
                 if (!data.success) {
-
                     toast.error(
                         data.message ||
                             "Failed to update wishlist"
@@ -734,11 +825,9 @@ export const AppContextProvider = ({ children }) => {
                 }
 
                 return true;
-
             } catch (error) {
-
                 console.error(
-                    "Save wishlist error:",
+                    "SAVE WISHLIST ERROR:",
                     error
                 );
 
@@ -760,9 +849,7 @@ export const AppContextProvider = ({ children }) => {
     const toggleWishlist = async (
         productId
     ) => {
-
         if (!user) {
-
             toast.error(
                 "Please login to use wishlist"
             );
@@ -771,7 +858,6 @@ export const AppContextProvider = ({ children }) => {
         }
 
         if (!productId) {
-
             toast.error(
                 "Invalid product"
             );
@@ -795,36 +881,41 @@ export const AppContextProvider = ({ children }) => {
         let updatedWishlist;
 
         if (alreadyExists) {
-
             updatedWishlist =
                 currentWishlist.filter(
                     (item) =>
                         String(item) !==
                         id
                 );
-
         } else {
-
             updatedWishlist = [
                 ...currentWishlist,
                 id,
             ];
         }
 
-        // Update UI immediately
+        // =================================================
+        // UPDATE UI
+        // =================================================
+
         setWishlist(
             updatedWishlist
         );
 
-        // Save database
+        // =================================================
+        // SAVE DATABASE
+        // =================================================
+
         const saved =
             await saveWishlistToDatabase(
                 updatedWishlist
             );
 
-        // Roll back if database failed
-        if (!saved) {
+        // =================================================
+        // ROLLBACK IF FAILED
+        // =================================================
 
+        if (!saved) {
             setWishlist(
                 currentWishlist
             );
@@ -846,9 +937,9 @@ export const AppContextProvider = ({ children }) => {
     const isInWishlist = (
         productId
     ) => {
-
-        if (!productId)
+        if (!productId) {
             return false;
+        }
 
         return wishlist.includes(
             String(productId)
@@ -868,51 +959,203 @@ export const AppContextProvider = ({ children }) => {
     // =====================================================
 
     useEffect(() => {
-
         if (user) {
-
             fetchUserData();
-
         } else {
-
             setUserData(null);
             setCartItems({});
             setWishlist([]);
             setIsSeller(false);
         }
-
     }, [user]);
+
+    // =====================================================
+    // CLEAN INVALID CART PRODUCTS
+    // =====================================================
+
+    useEffect(() => {
+        if (
+            !user ||
+            products.length === 0 ||
+            !cartItems ||
+            typeof cartItems !==
+                "object"
+        ) {
+            return;
+        }
+
+        const validCart = {};
+
+        let hasInvalidItems = false;
+
+        Object.entries(
+            cartItems
+        ).forEach(
+            ([itemId, value]) => {
+                // -----------------------------------------
+                // Remove old ::size suffix
+                // -----------------------------------------
+
+                const cleanId =
+                    String(itemId).split("::")[0];
+
+                // -----------------------------------------
+                // Check whether product exists
+                // -----------------------------------------
+
+                const productExists =
+                    products.some(
+                        (product) =>
+                            String(
+                                product._id
+                            ) ===
+                            String(
+                                cleanId
+                            )
+                    );
+
+                // -----------------------------------------
+                // INVALID PRODUCT
+                // -----------------------------------------
+
+                if (!productExists) {
+                    console.warn(
+                        "REMOVING INVALID CART PRODUCT:",
+                        itemId
+                    );
+
+                    hasInvalidItems =
+                        true;
+
+                    return;
+                }
+
+                // -----------------------------------------
+                // READ QUANTITY + SIZE
+                // -----------------------------------------
+
+                let quantity = 0;
+                let size = null;
+
+                if (
+                    value &&
+                    typeof value ===
+                        "object"
+                ) {
+                    quantity =
+                        Number(
+                            value.quantity
+                        ) || 0;
+
+                    size =
+                        value.size ||
+                        null;
+                } else {
+                    quantity =
+                        Number(value) || 0;
+                }
+
+                // -----------------------------------------
+                // SAVE VALID ITEM
+                // -----------------------------------------
+
+                if (
+                    quantity > 0
+                ) {
+                    validCart[
+                        cleanId
+                    ] = {
+                        quantity,
+                        size,
+                    };
+                }
+            }
+        );
+
+        // -----------------------------------------------
+        // Nothing invalid
+        // -----------------------------------------------
+
+        if (!hasInvalidItems) {
+            return;
+        }
+
+        console.log(
+            "CLEANED CART:",
+            validCart
+        );
+
+        // -----------------------------------------------
+        // UPDATE FRONTEND
+        // -----------------------------------------------
+
+        setCartItems(
+            validCart
+        );
+
+        // -----------------------------------------------
+        // UPDATE DATABASE
+        // -----------------------------------------------
+
+        saveCartToDatabase(
+            validCart
+        );
+    }, [
+        products,
+        user,
+        cartItems,
+    ]);
 
     // =====================================================
     // CONTEXT VALUE
     // =====================================================
 
     const value = {
-
+        // -------------------------------------------------
         // User
+        // -------------------------------------------------
+
         user,
         getToken,
 
+        // -------------------------------------------------
         // General
+        // -------------------------------------------------
+
         currency,
         router,
 
+        // -------------------------------------------------
         // Products
+        // -------------------------------------------------
+
         products,
         fetchProductData,
 
-        // ⭐ NEW ARRIVALS
+        // -------------------------------------------------
+        // New Arrivals
+        // -------------------------------------------------
+
         newArrivals,
 
-        // User data
+        // -------------------------------------------------
+        // User Data
+        // -------------------------------------------------
+
         userData,
         fetchUserData,
 
+        // -------------------------------------------------
         // Seller
+        // -------------------------------------------------
+
         isSeller,
         setIsSeller,
 
+        // -------------------------------------------------
         // Cart
+        // -------------------------------------------------
+
         cartItems,
         setCartItems,
         addToCart,
@@ -921,11 +1164,17 @@ export const AppContextProvider = ({ children }) => {
         getCartCount,
         getCartAmount,
 
-        // Product pricing
+        // -------------------------------------------------
+        // Product Pricing
+        // -------------------------------------------------
+
         getProductPrice,
         getProductOriginalPrice,
 
+        // -------------------------------------------------
         // Wishlist
+        // -------------------------------------------------
+
         wishlist,
         setWishlist,
         toggleWishlist,

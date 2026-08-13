@@ -15,7 +15,10 @@ export async function POST(request) {
     try {
         const { userId } = getAuth(request);
 
-        // Check seller authorization
+        // --------------------------------------------------
+        // CHECK SELLER AUTHORIZATION
+        // --------------------------------------------------
+
         const isSeller = await authSeller(userId);
 
         if (!isSeller) {
@@ -28,7 +31,10 @@ export async function POST(request) {
             );
         }
 
-        // Get form data
+        // --------------------------------------------------
+        // GET FORM DATA
+        // --------------------------------------------------
+
         const formData = await request.formData();
 
         const name = formData.get("name");
@@ -196,6 +202,33 @@ export async function POST(request) {
         await connectDB();
 
         // --------------------------------------------------
+        // INITIALIZE INVENTORY
+        // --------------------------------------------------
+        // Every size starts with 0 pieces.
+        //
+        // Example:
+        //
+        // sizes = ["S", "M", "L", "XL"]
+        //
+        // inventory becomes:
+        //
+        // {
+        //     S: 0,
+        //     M: 0,
+        //     L: 0,
+        //     XL: 0
+        // }
+        //
+        // The seller will update these quantities
+        // from the Inventory page.
+
+        const inventory = {};
+
+        sizes.forEach((size) => {
+            inventory[size] = 0;
+        });
+
+        // --------------------------------------------------
         // CREATE PRODUCT
         // --------------------------------------------------
 
@@ -220,6 +253,8 @@ export async function POST(request) {
 
             sizePrices,
 
+            inventory,
+
             date: Date.now(),
         });
 
@@ -232,7 +267,6 @@ export async function POST(request) {
             message: "Upload successful",
             newProduct,
         });
-
     } catch (error) {
         console.error("ADD PRODUCT ERROR:", error);
 
@@ -247,4 +281,3 @@ export async function POST(request) {
         );
     }
 }
-

@@ -39,12 +39,19 @@ const productSchema = new mongoose.Schema({
         required: true,
     },
 
+    // "age" for age ranges
+    // "size" for S, M, L, XL etc.
     sizingMode: {
         type: String,
         enum: ["age", "size"],
         required: true,
     },
 
+    // Example:
+    // ["S", "M", "L", "XL"]
+    //
+    // or:
+    // ["2-3 Years", "4-5 Years", "6-7 Years"]
     sizes: {
         type: [String],
         required: true,
@@ -55,15 +62,47 @@ const productSchema = new mongoose.Schema({
     },
 
     // Price for each size / age range
+    //
     // Example:
     // {
     //     "S": 499,
     //     "M": 599,
-    //     "L": 699
+    //     "L": 699,
+    //     "XL": 799
     // }
+    //
     sizePrices: {
         type: Map,
         of: Number,
+        default: {},
+    },
+
+    // =====================================================
+    // INVENTORY
+    // =====================================================
+    //
+    // Stock is stored separately for every size / age range.
+    //
+    // Example:
+    //
+    // inventory: {
+    //     "S": 5,
+    //     "M": 8,
+    //     "L": 2,
+    //     "XL": 0
+    // }
+    //
+    // For a product without meaningful size variations,
+    // we can still use the first/default size as the
+    // inventory key.
+    //
+    inventory: {
+        type: Map,
+        of: {
+            type: Number,
+            min: 0,
+            default: 0,
+        },
         default: {},
     },
 
