@@ -55,7 +55,9 @@ const ProductList = () => {
       console.error("FETCH PRODUCTS ERROR:", error);
 
       toast.error(
-        error.response?.data?.message || error.message
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch products"
       );
 
     } finally {
@@ -70,7 +72,10 @@ const ProductList = () => {
   // DELETE PRODUCT
   // ==========================================
 
-  const handleDeleteProduct = async (productId, productName) => {
+  const handleDeleteProduct = async (
+    productId,
+    productName
+  ) => {
 
     const confirmed = window.confirm(
       `Are you sure you want to remove "${productName}"?`
@@ -100,14 +105,16 @@ const ProductList = () => {
 
       if (data.success) {
 
-        // Remove product immediately from the UI
         setProducts((prevProducts) =>
           prevProducts.filter(
-            (product) => product._id !== productId
+            (product) =>
+              product._id !== productId
           )
         );
 
-        toast.success("Product removed successfully");
+        toast.success(
+          "Product removed successfully"
+        );
 
       } else {
 
@@ -117,7 +124,10 @@ const ProductList = () => {
 
     } catch (error) {
 
-      console.error("DELETE PRODUCT ERROR:", error);
+      console.error(
+        "DELETE PRODUCT ERROR:",
+        error
+      );
 
       toast.error(
         error.response?.data?.message ||
@@ -140,9 +150,13 @@ const ProductList = () => {
   useEffect(() => {
 
     if (user) {
+
       fetchSellerProduct();
+
     } else {
+
       setLoading(false);
+
     }
 
   }, [user]);
@@ -163,144 +177,165 @@ const ProductList = () => {
 
         <div className="w-full md:p-10 p-4">
 
-          <h2 className="pb-4 text-lg font-medium">
-            All Products
-          </h2>
+          {/* ==================================
+              TITLE
+          ================================== */}
 
-          <div className="flex flex-col items-center max-w-5xl w-full overflow-hidden rounded-md bg-white border border-gray-500/20">
+          <div className="flex items-center justify-between mb-5">
 
-            <table className="table-fixed w-full overflow-hidden">
+            <div>
 
-              {/* ============================
-                  TABLE HEADER
-              ============================= */}
+              <h2 className="text-lg md:text-xl font-medium text-gray-900">
+                All Products
+              </h2>
 
-              <thead className="text-gray-900 text-sm text-left">
+              <p className="text-xs md:text-sm text-gray-500 mt-1">
+                {products.length}{" "}
+                {products.length === 1
+                  ? "product"
+                  : "products"}
+              </p>
 
-                <tr>
+            </div>
 
-                  <th className="w-2/3 md:w-2/5 px-4 py-3 font-medium truncate">
-                    Product
-                  </th>
+          </div>
 
-                  <th className="px-4 py-3 font-medium truncate max-sm:hidden">
-                    Category
-                  </th>
+          {/* ==================================
+              EMPTY STATE
+          ================================== */}
 
-                  <th className="px-4 py-3 font-medium truncate">
-                    Price
-                  </th>
+          {products.length === 0 ? (
 
-                  <th className="px-4 py-3 font-medium truncate">
-                    Action
-                  </th>
+            <div className="w-full max-w-5xl bg-white border border-gray-500/20 rounded-xl py-14 px-6 text-center">
 
-                </tr>
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
 
-              </thead>
+                <span className="text-2xl">
+                  📦
+                </span>
 
-              {/* ============================
-                  PRODUCTS
-              ============================= */}
+              </div>
 
-              <tbody className="text-sm text-gray-500">
+              <p className="text-gray-700 font-medium">
+                No products found
+              </p>
 
-                {products.length === 0 ? (
+              <p className="text-sm text-gray-400 mt-1">
+                Your products will appear here.
+              </p>
 
-                  <tr>
+            </div>
 
-                    <td
-                      colSpan="4"
-                      className="text-center py-10 text-gray-500"
+          ) : (
+
+            <>
+
+              {/* ==================================================
+                  MOBILE PRODUCT CARDS
+                  Visible only below md
+              ================================================== */}
+
+              <div className="md:hidden space-y-4">
+
+                {products.map(
+                  (product, index) => (
+
+                    <div
+                      key={
+                        product._id ||
+                        index
+                      }
+                      className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm"
                     >
-                      No products found.
-                    </td>
 
-                  </tr>
+                      {/* ================================
+                          PRODUCT TOP
+                      ================================= */}
 
-                ) : (
+                      <div className="flex gap-3 p-3">
 
-                  products.map((product, index) => (
+                        {/* IMAGE */}
 
-                    <tr
-                      key={product._id || index}
-                      className="border-t border-gray-500/20"
-                    >
-
-                      {/* ============================
-                          PRODUCT
-                      ============================= */}
-
-                      <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3 truncate">
-
-                        <div className="bg-gray-500/10 rounded p-2 shrink-0">
+                        <div className="w-24 h-24 shrink-0 bg-gray-500/10 rounded-lg flex items-center justify-center overflow-hidden">
 
                           <Image
-                            src={product.image[0]}
-                            alt="product Image"
-                            className="w-16 h-16 object-contain"
-                            width={1280}
-                            height={720}
+                            src={
+                              product.image?.[0]
+                            }
+                            alt={
+                              product.name ||
+                              "Product image"
+                            }
+                            className="w-full h-full object-contain"
+                            width={300}
+                            height={300}
                           />
 
                         </div>
 
-                        <span className="truncate w-full">
+                        {/* PRODUCT INFORMATION */}
 
-                          {product.name}
+                        <div className="min-w-0 flex-1 flex flex-col justify-center">
 
-                        </span>
+                          <h3 className="text-sm font-medium text-gray-900 leading-snug line-clamp-2">
+                            {
+                              product.name
+                            }
+                          </h3>
 
-                      </td>
+                          <p className="text-xs text-gray-500 mt-1.5 truncate">
+                            {
+                              product.category
+                            }
+                          </p>
 
-                      {/* ============================
-                          CATEGORY
-                      ============================= */}
+                          <p className="text-base font-semibold text-gray-900 mt-2">
 
-                      <td className="px-4 py-3 max-sm:hidden">
+                            {
+                              process.env
+                                .NEXT_PUBLIC_CURRENCY
+                            }
 
-                        {product.category}
+                            {
+                              product.offerPrice
+                            }
 
-                      </td>
+                          </p>
 
-                      {/* ============================
-                          PRICE
-                      ============================= */}
+                        </div>
 
-                      <td className="px-4 py-3">
+                      </div>
 
-                        {process.env.NEXT_PUBLIC_CURRENCY}
-                        {product.offerPrice}
-
-                      </td>
-
-                      {/* ============================
+                      {/* ================================
                           ACTIONS
-                      ============================= */}
+                      ================================= */}
 
-                      <td className="px-4 py-3">
+                      <div className="border-t border-gray-100 p-3">
 
-                        <div className="flex items-center gap-2">
+                        <div className="grid grid-cols-2 gap-2">
 
                           {/* VISIT */}
 
                           <button
+                            type="button"
                             onClick={() =>
                               router.push(
                                 `/product/${product._id}`
                               )
                             }
-                            className="flex items-center gap-1 px-2 md:px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors"
+                            className="h-10 flex items-center justify-center gap-1.5 bg-orange-600 hover:bg-orange-700 active:scale-[0.98] text-white rounded-lg text-sm font-medium transition-all"
                           >
 
-                            <span className="hidden md:block">
+                            <span>
                               Visit
                             </span>
 
                             <Image
-                              className="h-3.5"
-                              src={assets.redirect_icon}
-                              alt="redirect_icon"
+                              className="h-3.5 w-3.5"
+                              src={
+                                assets.redirect_icon
+                              }
+                              alt="redirect"
                             />
 
                           </button>
@@ -308,33 +343,32 @@ const ProductList = () => {
                           {/* REMOVE */}
 
                           <button
+                            type="button"
                             onClick={() =>
                               handleDeleteProduct(
                                 product._id,
                                 product.name
                               )
                             }
-                            disabled={deletingId === product._id}
-                            className="flex items-center gap-1 px-2 md:px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white rounded-md transition-colors"
+                            disabled={
+                              deletingId ===
+                              product._id
+                            }
+                            className="h-10 flex items-center justify-center gap-1.5 bg-red-600 hover:bg-red-700 active:scale-[0.98] disabled:bg-red-300 text-white rounded-lg text-sm font-medium transition-all"
                           >
 
-                            {deletingId === product._id ? (
+                            {deletingId ===
+                            product._id ? (
 
-                              <span className="text-xs">
+                              <span>
                                 Removing...
                               </span>
 
                             ) : (
 
-                              <>
-                                <span className="hidden md:block">
-                                  Remove
-                                </span>
-
-                                <span className="md:hidden">
-                                  ×
-                                </span>
-                              </>
+                              <span>
+                                Remove
+                              </span>
 
                             )}
 
@@ -342,19 +376,213 @@ const ProductList = () => {
 
                         </div>
 
-                      </td>
+                      </div>
+
+                    </div>
+
+                  )
+                )}
+
+              </div>
+
+
+              {/* ==================================================
+                  DESKTOP / TABLET TABLE
+                  Visible md and above
+              ================================================== */}
+
+              <div className="hidden md:flex flex-col items-center max-w-5xl w-full overflow-hidden rounded-md bg-white border border-gray-500/20">
+
+                <table className="table-fixed w-full overflow-hidden">
+
+                  {/* ============================
+                      TABLE HEADER
+                  ============================= */}
+
+                  <thead className="text-gray-900 text-sm text-left">
+
+                    <tr>
+
+                      <th className="w-2/5 px-4 py-3 font-medium truncate">
+                        Product
+                      </th>
+
+                      <th className="px-4 py-3 font-medium truncate">
+                        Category
+                      </th>
+
+                      <th className="px-4 py-3 font-medium truncate">
+                        Price
+                      </th>
+
+                      <th className="px-4 py-3 font-medium truncate">
+                        Action
+                      </th>
 
                     </tr>
 
-                  ))
+                  </thead>
 
-                )}
+                  {/* ============================
+                      PRODUCTS
+                  ============================= */}
 
-              </tbody>
+                  <tbody className="text-sm text-gray-500">
 
-            </table>
+                    {products.map(
+                      (product, index) => (
 
-          </div>
+                        <tr
+                          key={
+                            product._id ||
+                            index
+                          }
+                          className="border-t border-gray-500/20"
+                        >
+
+                          {/* PRODUCT */}
+
+                          <td className="px-4 py-3">
+
+                            <div className="flex items-center gap-3 min-w-0">
+
+                              <div className="bg-gray-500/10 rounded p-2 shrink-0">
+
+                                <Image
+                                  src={
+                                    product
+                                      .image?.[0]
+                                  }
+                                  alt={
+                                    product.name ||
+                                    "Product image"
+                                  }
+                                  className="w-16 h-16 object-contain"
+                                  width={1280}
+                                  height={720}
+                                />
+
+                              </div>
+
+                              <span className="truncate">
+                                {
+                                  product.name
+                                }
+                              </span>
+
+                            </div>
+
+                          </td>
+
+                          {/* CATEGORY */}
+
+                          <td className="px-4 py-3">
+
+                            {
+                              product.category
+                            }
+
+                          </td>
+
+                          {/* PRICE */}
+
+                          <td className="px-4 py-3">
+
+                            {
+                              process.env
+                                .NEXT_PUBLIC_CURRENCY
+                            }
+
+                            {
+                              product.offerPrice
+                            }
+
+                          </td>
+
+                          {/* ACTIONS */}
+
+                          <td className="px-4 py-3">
+
+                            <div className="flex items-center gap-2">
+
+                              {/* VISIT */}
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  router.push(
+                                    `/product/${product._id}`
+                                  )
+                                }
+                                className="flex items-center gap-1 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors"
+                              >
+
+                                <span>
+                                  Visit
+                                </span>
+
+                                <Image
+                                  className="h-3.5 w-3.5"
+                                  src={
+                                    assets.redirect_icon
+                                  }
+                                  alt="redirect"
+                                />
+
+                              </button>
+
+                              {/* REMOVE */}
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDeleteProduct(
+                                    product._id,
+                                    product.name
+                                  )
+                                }
+                                disabled={
+                                  deletingId ===
+                                  product._id
+                                }
+                                className="flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white rounded-md transition-colors"
+                              >
+
+                                {deletingId ===
+                                product._id ? (
+
+                                  <span>
+                                    Removing...
+                                  </span>
+
+                                ) : (
+
+                                  <span>
+                                    Remove
+                                  </span>
+
+                                )}
+
+                              </button>
+
+                            </div>
+
+                          </td>
+
+                        </tr>
+
+                      )
+                    )}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </>
+
+          )}
 
         </div>
 
