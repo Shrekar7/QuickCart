@@ -16,6 +16,7 @@ const categories = [
     image: assets.Poster_halloween,
     href: "/category/halloween",
     description: "Spooky & fun",
+    accent: "#E8578E",
   },
   {
     id: 2,
@@ -23,6 +24,7 @@ const categories = [
     image: assets.animal_birds_poster,
     href: "/category/animals-and-birds",
     description: "Wild & wonderful",
+    accent: "#2E7D6B",
   },
   {
     id: 3,
@@ -30,6 +32,7 @@ const categories = [
     image: assets.indian_state_poster,
     href: "/category/indian-state-and-dance",
     description: "Culture & tradition",
+    accent: "#F5B700",
   },
   {
     id: 4,
@@ -37,6 +40,7 @@ const categories = [
     image: assets.superhero_poster,
     href: "/category/superhero",
     description: "Heroes & legends",
+    accent: "#8B5CF6",
   },
   {
     id: 5,
@@ -44,6 +48,7 @@ const categories = [
     image: assets.fairytale_poster,
     href: "/category/fairy-tale-and-fantasy",
     description: "Dreams & magic",
+    accent: "#E8578E",
   },
   {
     id: 6,
@@ -51,6 +56,7 @@ const categories = [
     image: assets.service_poster,
     href: "/category/profession-dress-up",
     description: "Future starts here",
+    accent: "#8B5CF6",
   },
   {
     id: 7,
@@ -58,6 +64,7 @@ const categories = [
     image: assets.History,
     href: "/category/historical-and-mythology",
     description: "Stories of the past",
+    accent: "#F5B700",
   },
   {
     id: 8,
@@ -65,6 +72,7 @@ const categories = [
     image: assets.Sports_poster,
     href: "/category/sports-and-team-wear",
     description: "Play your part",
+    accent: "#2E7D6B",
   },
 ];
 
@@ -72,35 +80,33 @@ const categories = [
    ARROW ICON
 ============================================================ */
 
-const ArrowIcon = ({ direction = "right" }) => {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      {direction === "left" ? (
-        <path
-          d="M15 18L9 12L15 6"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      ) : (
-        <path
-          d="M9 18L15 12L9 6"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      )}
-    </svg>
-  );
-};
+const ArrowIcon = ({ direction = "right" }) => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+  >
+    {direction === "left" ? (
+      <path
+        d="M15 18L9 12L15 6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ) : (
+      <path
+        d="M9 18L15 12L9 6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    )}
+  </svg>
+);
 
 /* ============================================================
    CATEGORY SECTION
@@ -136,7 +142,7 @@ const CategorySection = () => {
     const gap = parseFloat(
       styles.columnGap ||
         styles.gap ||
-        "20"
+        "18"
     );
 
     const amount =
@@ -177,7 +183,7 @@ const CategorySection = () => {
       const gap = parseFloat(
         styles.columnGap ||
           styles.gap ||
-          "20"
+          "18"
       );
 
       const index = Math.round(
@@ -230,10 +236,12 @@ const CategorySection = () => {
 
     if (!container) return;
 
-    const card =
-      container.querySelector(
-        `[data-category-card]:nth-child(${index + 1})`
+    const cards =
+      container.querySelectorAll(
+        "[data-category-card]"
       );
+
+    const card = cards[index];
 
     if (!card) return;
 
@@ -245,8 +253,17 @@ const CategorySection = () => {
   };
 
   return (
-    <section className="relative w-full mt-10 sm:mt-14 md:mt-16 lg:mt-20 pb-10 md:pb-16">
-
+    <section
+      className="
+        relative
+        w-full
+        mt-8
+        sm:mt-10
+        md:mt-12
+        pb-8
+        md:pb-12
+      "
+    >
       {/* ======================================================
           MAIN CONTAINER
       ======================================================= */}
@@ -261,18 +278,17 @@ const CategorySection = () => {
           rounded-[28px]
           sm:rounded-[34px]
           md:rounded-[40px]
+          bg-white
           border
-          border-[#E8E2DB]
-          bg-[#F8F6F3]
-          py-12
-          sm:py-14
-          md:py-16
-          lg:py-20
+          border-[#EEE9F2]
+          py-10
+          sm:py-12
+          md:py-14
         "
       >
 
         {/* ==================================================
-            BACKGROUND
+            DECORATIVE BACKGROUND
         =================================================== */}
 
         <div
@@ -280,11 +296,11 @@ const CategorySection = () => {
             pointer-events-none
             absolute
             -top-32
-            left-[8%]
-            h-80
-            w-80
+            -left-24
+            h-[300px]
+            w-[300px]
             rounded-full
-            bg-[#E9E1EF]/40
+            bg-[#F5B700]/[0.08]
             blur-3xl
           "
         />
@@ -293,12 +309,12 @@ const CategorySection = () => {
           className="
             pointer-events-none
             absolute
-            right-[-100px]
-            top-[30%]
-            h-[420px]
-            w-[420px]
+            -right-24
+            top-20
+            h-[340px]
+            w-[340px]
             rounded-full
-            bg-[#F2E3E8]/35
+            bg-[#8B5CF6]/[0.07]
             blur-3xl
           "
         />
@@ -308,11 +324,11 @@ const CategorySection = () => {
             pointer-events-none
             absolute
             bottom-[-150px]
-            left-[35%]
-            h-96
-            w-96
+            left-[38%]
+            h-[320px]
+            w-[320px]
             rounded-full
-            bg-white/80
+            bg-[#E8578E]/[0.06]
             blur-3xl
           "
         />
@@ -332,51 +348,77 @@ const CategorySection = () => {
           "
         >
 
-          {/* SMALL LABEL */}
+          {/* SMALL BRAND LABEL */}
 
-          <div className="flex items-center justify-center gap-3 mb-5">
-
-            <span className="h-px w-8 bg-[#C8C1B9]" />
+          <div
+            className="
+              inline-flex
+              items-center
+              gap-2
+              rounded-full
+              border
+              border-[#E9E1F0]
+              bg-[#FAF8FC]
+              px-4
+              py-2
+            "
+          >
+            <span
+              className="
+                h-1.5
+                w-1.5
+                rounded-full
+                bg-[#F5B700]
+              "
+            />
 
             <span
               className="
-                text-[10px]
-                font-semibold
+                text-[9px]
+                font-bold
                 uppercase
-                tracking-[0.3em]
-                text-[#827A73]
+                tracking-[0.25em]
+                text-[#766A82]
               "
             >
-              Discover
+              Explore Sunshine
             </span>
 
-            <span className="h-px w-8 bg-[#C8C1B9]" />
-
+            <span
+              className="
+                h-1.5
+                w-1.5
+                rounded-full
+                bg-[#E8578E]
+              "
+            />
           </div>
 
           {/* HEADING */}
 
           <h2
             className="
+              mt-5
               font-serif
-              text-[32px]
-              leading-[1.05]
+              text-[34px]
+              leading-[1.02]
               tracking-[-0.04em]
-              text-[#292624]
-              sm:text-[38px]
-              md:text-[46px]
+              text-[#2E1A47]
+
+              sm:text-[40px]
+              md:text-[48px]
               lg:text-[52px]
             "
           >
-            Dress up.
+            Find their next
             <span
               className="
+                ml-2
                 italic
-                text-[#81758B]
+                text-[#8B5CF6]
               "
             >
-              {" "}
-              Dream big.
+              adventure.
             </span>
           </h2>
 
@@ -385,16 +427,17 @@ const CategorySection = () => {
           <p
             className="
               mx-auto
-              mt-5
-              max-w-xl
+              mt-4
+              max-w-[520px]
               text-[13px]
               leading-6
-              text-[#77716B]
+              text-[#81748F]
               sm:text-[14px]
             "
           >
-            Explore magical costumes and unforgettable
-            characters made for every little adventure.
+            From superheroes and princesses to
+            animals, professions and traditions —
+            there's a costume for every imagination.
           </p>
 
         </div>
@@ -403,7 +446,15 @@ const CategorySection = () => {
             CAROUSEL
         =================================================== */}
 
-        <div className="relative z-10 mt-10 sm:mt-12 md:mt-14">
+        <div
+          className="
+            relative
+            z-10
+            mt-9
+            sm:mt-10
+            md:mt-12
+          "
+        >
 
           {/* ==================================================
               LEFT ARROW
@@ -417,27 +468,26 @@ const CategorySection = () => {
             aria-label="Previous categories"
             className="
               absolute
-              left-5
+              left-4
               top-1/2
               z-30
               hidden
-              h-12
-              w-12
+              h-11
+              w-11
               -translate-y-1/2
               items-center
               justify-center
               rounded-full
               border
-              border-[#DDD7D0]
+              border-[#E5DFEA]
               bg-white
-              text-[#49433E]
-              shadow-[0_10px_30px_rgba(40,35,30,0.08)]
+              text-[#4C4057]
+              shadow-[0_10px_28px_rgba(46,26,71,0.10)]
               transition-all
               duration-300
               hover:-translate-y-[calc(50%+2px)]
-              hover:bg-[#292624]
+              hover:bg-[#2E1A47]
               hover:text-white
-              hover:shadow-[0_15px_35px_rgba(40,35,30,0.16)]
               lg:flex
             "
           >
@@ -456,27 +506,26 @@ const CategorySection = () => {
             aria-label="Next categories"
             className="
               absolute
-              right-5
+              right-4
               top-1/2
               z-30
               hidden
-              h-12
-              w-12
+              h-11
+              w-11
               -translate-y-1/2
               items-center
               justify-center
               rounded-full
               border
-              border-[#DDD7D0]
+              border-[#E5DFEA]
               bg-white
-              text-[#49433E]
-              shadow-[0_10px_30px_rgba(40,35,30,0.08)]
+              text-[#4C4057]
+              shadow-[0_10px_28px_rgba(46,26,71,0.10)]
               transition-all
               duration-300
               hover:-translate-y-[calc(50%+2px)]
-              hover:bg-[#292624]
+              hover:bg-[#2E1A47]
               hover:text-white
-              hover:shadow-[0_15px_35px_rgba(40,35,30,0.16)]
               lg:flex
             "
           >
@@ -494,12 +543,12 @@ const CategorySection = () => {
               inset-y-0
               left-0
               z-20
-              w-10
+              w-8
               bg-gradient-to-r
-              from-[#F8F6F3]
+              from-white
               to-transparent
-              sm:w-16
-              md:w-24
+              sm:w-12
+              md:w-20
             "
           />
 
@@ -514,12 +563,12 @@ const CategorySection = () => {
               inset-y-0
               right-0
               z-20
-              w-10
+              w-8
               bg-gradient-to-l
-              from-[#F8F6F3]
+              from-white
               to-transparent
-              sm:w-16
-              md:w-24
+              sm:w-12
+              md:w-20
             "
           />
 
@@ -534,7 +583,7 @@ const CategorySection = () => {
               gap-4
               overflow-x-auto
               px-5
-              pb-5
+              pb-4
               snap-x
               snap-mandatory
               scroll-smooth
@@ -543,10 +592,9 @@ const CategorySection = () => {
               sm:gap-5
               sm:px-8
 
-              md:gap-5
-              md:px-16
+              md:px-14
 
-              lg:px-20
+              lg:px-16
 
               [&::-webkit-scrollbar]:hidden
               [-ms-overflow-style:none]
@@ -556,7 +604,6 @@ const CategorySection = () => {
 
             {categories.map(
               (category, index) => (
-
                 <article
                   key={category.id}
                   data-category-card
@@ -568,29 +615,29 @@ const CategorySection = () => {
                   className="
                     group
                     relative
-                    aspect-[0.72]
-                    w-[190px]
+                    aspect-[0.76]
+                    w-[178px]
                     shrink-0
                     cursor-pointer
                     snap-start
                     overflow-hidden
-                    rounded-[24px]
-                    bg-[#DDD8D2]
-                    shadow-[0_8px_25px_rgba(45,38,32,0.08)]
+                    rounded-[22px]
+                    bg-[#E9E5EC]
+                    shadow-[0_7px_22px_rgba(46,26,71,0.09)]
                     ring-1
                     ring-black/[0.04]
                     transition-all
                     duration-500
 
                     hover:-translate-y-2
-                    hover:shadow-[0_22px_45px_rgba(45,38,32,0.18)]
+                    hover:shadow-[0_20px_40px_rgba(46,26,71,0.17)]
 
-                    sm:w-[210px]
-                    sm:rounded-[26px]
+                    sm:w-[195px]
+                    sm:rounded-[24px]
 
-                    md:w-[225px]
+                    md:w-[210px]
 
-                    lg:w-[235px]
+                    lg:w-[220px]
                   "
                 >
 
@@ -599,7 +646,6 @@ const CategorySection = () => {
                   =================================================== */}
 
                   {category.image ? (
-
                     <Image
                       src={category.image}
                       alt={category.name}
@@ -608,22 +654,20 @@ const CategorySection = () => {
                         index < 3
                       }
                       sizes="
-                        (max-width: 640px) 190px,
-                        (max-width: 768px) 210px,
-                        (max-width: 1024px) 225px,
-                        235px
+                        (max-width: 640px) 178px,
+                        (max-width: 768px) 195px,
+                        (max-width: 1024px) 210px,
+                        220px
                       "
                       className="
                         object-cover
                         transition-transform
-                        duration-[900ms]
+                        duration-[800ms]
                         ease-out
-                        group-hover:scale-[1.08]
+                        group-hover:scale-[1.07]
                       "
                     />
-
                   ) : (
-
                     <div
                       className="
                         absolute
@@ -631,18 +675,17 @@ const CategorySection = () => {
                         flex
                         items-center
                         justify-center
-                        bg-[#DDD8D2]
+                        bg-[#E9E5EC]
                         text-xs
-                        text-[#817A73]
+                        text-[#81748F]
                       "
                     >
                       No image
                     </div>
-
                   )}
 
                   {/* ==================================================
-                      IMAGE OVERLAY
+                      DARK IMAGE OVERLAY
                   =================================================== */}
 
                   <div
@@ -650,14 +693,14 @@ const CategorySection = () => {
                       absolute
                       inset-0
                       bg-gradient-to-t
-                      from-black/[0.82]
-                      via-black/[0.18]
+                      from-[#1E1528]/90
+                      via-[#1E1528]/15
                       to-transparent
                     "
                   />
 
                   {/* ==================================================
-                      TOP LIGHT
+                      TOP SHINE
                   =================================================== */}
 
                   <div
@@ -665,9 +708,9 @@ const CategorySection = () => {
                       absolute
                       inset-x-0
                       top-0
-                      h-32
+                      h-28
                       bg-gradient-to-b
-                      from-white/[0.12]
+                      from-white/[0.15]
                       to-transparent
                     "
                   />
@@ -679,11 +722,11 @@ const CategorySection = () => {
                   <div
                     className="
                       absolute
-                      left-4
-                      top-4
+                      left-3.5
+                      top-3.5
                       flex
-                      h-8
-                      min-w-8
+                      h-7
+                      min-w-7
                       items-center
                       justify-center
                       rounded-full
@@ -694,11 +737,10 @@ const CategorySection = () => {
                       backdrop-blur-md
                     "
                   >
-
                     <span
                       className="
-                        text-[9px]
-                        font-semibold
+                        text-[8px]
+                        font-bold
                         tracking-[0.12em]
                         text-white
                       "
@@ -710,8 +752,27 @@ const CategorySection = () => {
                         "0"
                       )}
                     </span>
-
                   </div>
+
+                  {/* ==================================================
+                      ACCENT DOT
+                  =================================================== */}
+
+                  <div
+                    className="
+                      absolute
+                      right-4
+                      top-4
+                      h-2
+                      w-2
+                      rounded-full
+                      opacity-90
+                    "
+                    style={{
+                      background:
+                        category.accent,
+                    }}
+                  />
 
                   {/* ==================================================
                       ARROW
@@ -720,11 +781,11 @@ const CategorySection = () => {
                   <div
                     className="
                       absolute
-                      right-4
-                      top-4
+                      right-3.5
+                      top-12
                       flex
-                      h-9
-                      w-9
+                      h-8
+                      w-8
                       translate-y-1
                       items-center
                       justify-center
@@ -753,54 +814,65 @@ const CategorySection = () => {
                       absolute
                       inset-x-0
                       bottom-0
-                      p-5
+                      p-4
+                      sm:p-5
                     "
                   >
+
+                    {/* ACCENT LINE */}
+
+                    <div
+                      className="
+                        mb-3
+                        h-1
+                        w-7
+                        rounded-full
+                        transition-all
+                        duration-500
+                        group-hover:w-12
+                      "
+                      style={{
+                        background:
+                          category.accent,
+                      }}
+                    />
+
+                    {/* CATEGORY NAME */}
 
                     <p
                       className="
                         font-serif
-                        text-[20px]
+                        text-[18px]
                         font-medium
                         leading-[1.08]
                         tracking-[-0.025em]
                         text-white
-                        sm:text-[21px]
+
+                        sm:text-[19px]
                       "
                     >
                       {category.name}
                     </p>
 
+                    {/* DESCRIPTION */}
+
                     <p
                       className="
                         mt-1.5
-                        text-[10px]
-                        tracking-wide
+                        text-[9px]
+                        font-medium
+                        tracking-[0.04em]
                         text-white/65
-                        sm:text-[11px]
+
+                        sm:text-[10px]
                       "
                     >
                       {category.description}
                     </p>
 
-                    {/* UNDERLINE */}
-
-                    <div
-                      className="
-                        mt-3
-                        h-px
-                        w-7
-                        bg-white/70
-                        transition-all
-                        duration-500
-                        group-hover:w-14
-                      "
-                    />
-
                   </div>
 
                 </article>
-
               )
             )}
 
@@ -820,10 +892,8 @@ const CategorySection = () => {
               lg:hidden
             "
           >
-
             {categories.map(
               (category, index) => (
-
                 <button
                   key={category.id}
                   type="button"
@@ -840,59 +910,69 @@ const CategorySection = () => {
                     ${
                       index ===
                       activeIndex
-                        ? "w-7 bg-[#5B5550]"
-                        : "w-1.5 bg-[#C9C3BC] hover:bg-[#9E968E]"
+                        ? "w-7 bg-[#8B5CF6]"
+                        : "w-1.5 bg-[#D7D0DD] hover:bg-[#B7AFC0]"
                     }
                   `}
                 />
-
               )
             )}
-
           </div>
-
         </div>
 
         {/* ==================================================
-            BOTTOM STATEMENT
+            BOTTOM CTA
         =================================================== */}
 
         <div
           className="
             relative
             z-10
-            mt-8
+            mt-7
             flex
             items-center
             justify-center
             gap-3
             px-5
-            md:mt-10
+            md:mt-9
           "
         >
 
-          <span className="h-px w-8 bg-[#D7D1C9] sm:w-12" />
+          <span
+            className="
+              h-px
+              w-8
+              bg-[#E5DFEA]
+              sm:w-12
+            "
+          />
 
           <span
             className="
               text-center
               text-[9px]
-              font-medium
+              font-semibold
               uppercase
-              tracking-[0.2em]
-              text-[#918981]
+              tracking-[0.18em]
+              text-[#968A9E]
               sm:text-[10px]
             "
           >
-            Something for every imagination
+            Pick a character. Make it yours.
           </span>
 
-          <span className="h-px w-8 bg-[#D7D1C9] sm:w-12" />
+          <span
+            className="
+              h-px
+              w-8
+              bg-[#E5DFEA]
+              sm:w-12
+            "
+          />
 
         </div>
 
       </div>
-
     </section>
   );
 };

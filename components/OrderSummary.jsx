@@ -115,24 +115,15 @@ const OrderSummary = () => {
 
     const createOrder = async () => {
         try {
-            // =============================================
-            // CHECK ADDRESS
-            // =============================================
-
             if (!selectedAddress) {
                 return toast.error(
                     "Please select an address"
                 );
             }
 
-            // =============================================
-            // CHECK CART
-            // =============================================
-
             if (
                 !cartItems ||
-                typeof cartItems !==
-                    "object"
+                typeof cartItems !== "object"
             ) {
                 return toast.error(
                     "Cart is empty"
@@ -141,116 +132,85 @@ const OrderSummary = () => {
 
             // =============================================
             // CONVERT CART TO ORDER ITEMS
+            // (now includes size)
             // =============================================
 
-            const cartItemsArray =
-                Object.entries(
-                    cartItems
-                )
-                    .map(
-                        ([key, value]) => {
-                            // ---------------------------------
-                            // CLEAN PRODUCT ID
-                            // ---------------------------------
+            const cartItemsArray = Object.entries(
+                cartItems
+            )
+                .map(([key, value]) => {
+                    const productId = String(
+                        key
+                    ).split("::")[0];
 
-                            const productId =
-                                String(
-                                    key
-                                ).split(
-                                    "::"
-                                )[0];
+                    let quantity = 0;
+                    let size = null;
 
-                            // ---------------------------------
-                            // GET QUANTITY
-                            // ---------------------------------
+                    // New cart format: { quantity, size }
+                    if (
+                        value &&
+                        typeof value === "object"
+                    ) {
+                        quantity =
+                            Number(
+                                value.quantity
+                            ) || 0;
 
-                            let quantity = 0;
+                        size = value.size || null;
+                    }
+                    // Old cart format: plain number
+                    else {
+                        quantity =
+                            Number(value) || 0;
+                    }
 
-                            // New cart format
-                            if (
-                                value &&
-                                typeof value ===
-                                    "object"
-                            ) {
-                                quantity =
-                                    Number(
-                                        value.quantity
-                                    ) || 0;
-                            }
+                    return {
+                        product: productId,
+                        quantity,
+                        size,
+                    };
+                })
+                .filter(
+                    (item) =>
+                        item.product &&
+                        item.quantity > 0
+                );
 
-                            // Old cart format
-                            else {
-                                quantity =
-                                    Number(
-                                        value
-                                    ) || 0;
-                            }
-
-                            return {
-                                product:
-                                    productId,
-                                quantity,
-                            };
-                        }
-                    )
-                    .filter(
-                        (item) =>
-                            item.product &&
-                            item.quantity >
-                                0
-                    );
-
-            // =============================================
-            // EMPTY CART CHECK
-            // =============================================
-
-            if (
-                cartItemsArray.length ===
-                0
-            ) {
+            if (cartItemsArray.length === 0) {
                 return toast.error(
                     "Cart is empty"
                 );
             }
 
             // =============================================
-            // MERGE DUPLICATE PRODUCTS
+            // MERGE DUPLICATES
+            // keyed by product + size, so different
+            // sizes of the same product stay as
+            // separate order lines
             // =============================================
 
             const mergedItems = {};
 
-            cartItemsArray.forEach(
-                (item) => {
-                    if (
-                        mergedItems[
-                            item.product
-                        ]
-                    ) {
-                        mergedItems[
-                            item.product
-                        ] +=
-                            item.quantity;
-                    } else {
-                        mergedItems[
-                            item.product
-                        ] =
-                            item.quantity;
-                    }
-                }
-            );
+            cartItemsArray.forEach((item) => {
+                const mergeKey = `${item.product}::${
+                    item.size || "none"
+                }`;
 
-            const finalOrderItems =
-                Object.entries(
-                    mergedItems
-                ).map(
-                    ([
-                        product,
-                        quantity,
-                    ]) => ({
-                        product,
-                        quantity,
-                    })
-                );
+                if (mergedItems[mergeKey]) {
+                    mergedItems[mergeKey].quantity +=
+                        item.quantity;
+                } else {
+                    mergedItems[mergeKey] = {
+                        product: item.product,
+                        quantity: item.quantity,
+                        size: item.size,
+                    };
+                }
+            });
+
+            const finalOrderItems = Object.values(
+                mergedItems
+            );
 
             // =============================================
             // DEBUG
@@ -310,15 +270,7 @@ const OrderSummary = () => {
                         "Order placed successfully"
                 );
 
-                // -----------------------------------------
-                // CLEAR FRONTEND CART
-                // -----------------------------------------
-
                 setCartItems({});
-
-                // -----------------------------------------
-                // CLEAR DATABASE CART
-                // -----------------------------------------
 
                 try {
                     await axios.post(
@@ -341,10 +293,6 @@ const OrderSummary = () => {
                         cartError
                     );
                 }
-
-                // -----------------------------------------
-                // GO TO ORDER PLACED PAGE
-                // -----------------------------------------
 
                 router.push(
                     "/order-placed"

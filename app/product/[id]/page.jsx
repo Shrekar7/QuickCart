@@ -34,6 +34,7 @@ const Product = () => {
     // =====================================================
 
     const [isZoomed, setIsZoomed] = useState(false);
+
     const [zoomPosition, setZoomPosition] = useState({
         x: 50,
         y: 50,
@@ -44,7 +45,9 @@ const Product = () => {
     // =====================================================
 
     useEffect(() => {
-        if (!products || products.length === 0 || !id) return;
+        if (!products || products.length === 0 || !id) {
+            return;
+        }
 
         const product = products.find(
             (item) => String(item._id) === String(id)
@@ -62,6 +65,7 @@ const Product = () => {
             setSelectedSize(null);
             setMainImage(null);
             setIsZoomed(false);
+
             setZoomPosition({
                 x: 50,
                 y: 50,
@@ -191,7 +195,7 @@ const Product = () => {
             : false;
 
     // =====================================================
-    // SIZE PRICE
+    // SIZE / AGE PRICE
     // =====================================================
 
     const getSizePrice = (size) => {
@@ -222,6 +226,74 @@ const Product = () => {
 
     const selectedSizePrice =
         getSizePrice(selectedSize);
+
+    // =====================================================
+    // INVENTORY
+    // =====================================================
+
+    const getStock = (size) => {
+        if (
+            !productData?.inventory ||
+            !size
+        ) {
+            return 0;
+        }
+
+        const inventory =
+            productData.inventory;
+
+        // Mongoose Map
+        if (
+            inventory instanceof Map
+        ) {
+            return (
+                Number(
+                    inventory.get(size)
+                ) || 0
+            );
+        }
+
+        // Normal object
+        return (
+            Number(
+                inventory[size]
+            ) || 0
+        );
+    };
+
+    // =====================================================
+    // SELECTED SIZE / AGE STOCK
+    // =====================================================
+
+    const selectedStock =
+        selectedSize
+            ? getStock(selectedSize)
+            : null;
+
+    // =====================================================
+    // CHECK IF ANY SIZE / AGE HAS STOCK
+    // =====================================================
+
+    const hasAnyStock =
+        productData?.sizes?.some(
+            (size) =>
+                getStock(size) > 0
+        ) ?? false;
+
+    // =====================================================
+    // ENTIRE PRODUCT OUT OF STOCK
+    // =====================================================
+
+    const isOutOfStock =
+        !hasAnyStock;
+
+    // =====================================================
+    // SELECTED SIZE / AGE OUT OF STOCK
+    // =====================================================
+
+    const selectedSizeOutOfStock =
+        selectedSize !== null &&
+        selectedStock === 0;
 
     // =====================================================
     // PRICES
@@ -269,10 +341,11 @@ const Product = () => {
             : 0;
 
     // =====================================================
-    // REQUIRE SIZE
+    // REQUIRE SIZE / AGE
     // =====================================================
 
     const requireSize = () => {
+        // Product has no sizes
         if (
             !productData?.sizes ||
             productData.sizes.length === 0
@@ -280,6 +353,7 @@ const Product = () => {
             return true;
         }
 
+        // No size selected
         if (!selectedSize) {
             toast.error(
                 productData.sizingMode ===
@@ -295,18 +369,57 @@ const Product = () => {
     };
 
     // =====================================================
+    // CHECK SELECTED STOCK
+    // =====================================================
+
+    const checkSelectedStock = () => {
+        if (!requireSize()) {
+            return false;
+        }
+
+        if (selectedStock <= 0) {
+            toast.error(
+                productData.sizingMode ===
+                    "age"
+                    ? `Sorry, ${selectedSize} is out of stock`
+                    : `Sorry, size ${selectedSize} is out of stock`
+            );
+
+            return false;
+        }
+
+        return true;
+    };
+
+    // =====================================================
     // ADD TO CART
     // =====================================================
 
     const handleAddToCart = async () => {
         if (!productData?._id) {
-            toast.error(
-                "Invalid product"
-            );
+            toast.error("Invalid product");
             return;
         }
 
-        if (!requireSize()) {
+        // Entire product out of stock
+        if (isOutOfStock) {
+            toast.error("This product is out of stock");
+            return;
+        }
+
+        // Check size / age
+        if (!checkSelectedStock()) {
+            return;
+        }
+
+        // Don't allow more than available stock
+        if (
+            cartQuantity >= selectedStock
+        ) {
+            toast.error(
+                `Only ${selectedStock} available`
+            );
+
             return;
         }
 
@@ -329,8 +442,33 @@ const Product = () => {
 
     const handleIncreaseQuantity =
         async () => {
-            if (!productData?._id)
+            if (!productData?._id) {
                 return;
+            }
+
+            if (!selectedSize) {
+                toast.error(
+                    productData.sizingMode ===
+                        "age"
+                        ? "Please select an age range"
+                        : "Please select a size"
+                );
+
+                return;
+            }
+
+            const stock =
+                getStock(selectedSize);
+
+            if (
+                cartQuantity >= stock
+            ) {
+                toast.error(
+                    `Only ${stock} available`
+                );
+
+                return;
+            }
 
             await updateCartQuantity(
                 productData._id,
@@ -344,8 +482,9 @@ const Product = () => {
 
     const handleDecreaseQuantity =
         async () => {
-            if (!productData?._id)
+            if (!productData?._id) {
                 return;
+            }
 
             if (cartQuantity <= 1) {
                 await updateCartQuantity(
@@ -368,26 +507,39 @@ const Product = () => {
 
     const handleBuyNow = async () => {
         if (!productData?._id) {
-            toast.error(
-                "Invalid product"
-            );
+            toast.error("Invalid product");
             return;
         }
 
-        // Make sure size/age is selected
-        if (!requireSize()) {
+        // Entire product out of stock
+        if (isOutOfStock) {
+            toast.error(
+                "This product is out of stock"
+            );
+
+            return;
+        }
+
+        // Check size / age and stock
+        if (!checkSelectedStock()) {
+            return;
+        }
+
+        // Check available stock
+        if (
+            cartQuantity >= selectedStock
+        ) {
+            toast.error(
+                `Only ${selectedStock} available`
+            );
+
             return;
         }
 
         try {
             /*
-             * IMPORTANT:
-             *
-             * If this product is not already in the cart,
+             * If product is not in cart,
              * add it first.
-             *
-             * We WAIT for addToCart() to finish before
-             * navigating to the cart page.
              */
 
             if (cartQuantity === 0) {
@@ -398,9 +550,10 @@ const Product = () => {
             }
 
             /*
-             * Give React/database a moment to finish
-             * updating before changing pages.
+             * Give state/database a moment
+             * before navigating.
              */
+
             await new Promise(
                 (resolve) =>
                     setTimeout(
@@ -428,8 +581,9 @@ const Product = () => {
 
     const handleWishlist =
         async () => {
-            if (!productData?._id)
+            if (!productData?._id) {
                 return;
+            }
 
             await toggleWishlist(
                 productData._id
@@ -447,11 +601,13 @@ const Product = () => {
 
                 <main className="min-h-[60vh] flex items-center justify-center">
                     <div className="text-center">
+
                         <div className="w-8 h-8 border-2 border-[#8B5CF6] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
 
                         <p className="text-sm text-[#5B4B75]/60">
                             Loading product...
                         </p>
+
                     </div>
                 </main>
 
@@ -465,6 +621,62 @@ const Product = () => {
     // =====================================================
 
     const CartAction = () => {
+
+        // =================================================
+        // ENTIRE PRODUCT OUT OF STOCK
+        // =================================================
+
+        if (isOutOfStock) {
+            return (
+                <div className="flex flex-col gap-3 w-full">
+
+                    <div className="h-14 w-full rounded-full flex items-center justify-center bg-[#F5F3F8] border-2 border-[#E5E0ED] text-[#5B4B75]/60 font-semibold">
+                        Out of Stock
+                    </div>
+
+                    <button
+                        type="button"
+                        disabled
+                        className="h-14 w-full rounded-full font-semibold text-base text-white bg-[#B8AEC5] cursor-not-allowed"
+                    >
+                        Buy Now
+                    </button>
+
+                </div>
+            );
+        }
+
+        // =================================================
+        // SELECTED SIZE / AGE OUT OF STOCK
+        // =================================================
+
+        if (
+            selectedSize &&
+            selectedSizeOutOfStock
+        ) {
+            return (
+                <div className="flex flex-col gap-3 w-full">
+
+                    <div className="h-14 w-full rounded-full flex items-center justify-center bg-[#FFF3F6] border-2 border-[#E8578E]/20 text-[#E8578E] font-semibold">
+                        Out of Stock
+                    </div>
+
+                    <button
+                        type="button"
+                        disabled
+                        className="h-14 w-full rounded-full font-semibold text-base text-white bg-[#B8AEC5] cursor-not-allowed"
+                    >
+                        Buy Now
+                    </button>
+
+                </div>
+            );
+        }
+
+        // =================================================
+        // NORMAL CART
+        // =================================================
+
         return (
             <div className="flex flex-col gap-3 w-full">
 
@@ -493,11 +705,25 @@ const Product = () => {
                             onClick={
                                 handleIncreaseQuantity
                             }
+                            disabled={
+                                selectedStock !==
+                                    null &&
+                                cartQuantity >=
+                                    selectedStock
+                            }
                             aria-label="Increase quantity"
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-2xl font-bold text-[#8B5CF6] hover:bg-[#8B5CF6]/10 active:scale-90 transition-all"
+                            className={`w-10 h-10 rounded-full flex items-center justify-center text-2xl font-bold transition-all ${
+                                selectedStock !==
+                                    null &&
+                                cartQuantity >=
+                                    selectedStock
+                                    ? "text-[#B8AEC5] cursor-not-allowed"
+                                    : "text-[#8B5CF6] hover:bg-[#8B5CF6]/10 active:scale-90"
+                            }`}
                         >
                             +
                         </button>
+
                     </div>
                 ) : (
                     <button
@@ -524,6 +750,7 @@ const Product = () => {
                 >
                     Buy Now
                 </button>
+
             </div>
         );
     };
@@ -575,6 +802,7 @@ const Product = () => {
                             productData.name
                         }
                     </span>
+
                 </div>
 
                 {/* PRODUCT */}
@@ -618,19 +846,30 @@ const Product = () => {
                             }
                         >
 
+                            {/* DISCOUNT */}
+
                             {discountPercent >
-                                0 && (
-                                <span
-                                    className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-lg"
-                                    style={{
-                                        background:
-                                            "linear-gradient(135deg, #E8578E 0%, #C23A6F 100%)",
-                                    }}
-                                >
-                                    {
-                                        discountPercent
-                                    }
-                                    % OFF
+                                0 &&
+                                !isOutOfStock && (
+                                    <span
+                                        className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-lg"
+                                        style={{
+                                            background:
+                                                "linear-gradient(135deg, #E8578E 0%, #C23A6F 100%)",
+                                        }}
+                                    >
+                                        {
+                                            discountPercent
+                                        }
+                                        % OFF
+                                    </span>
+                                )}
+
+                            {/* OUT OF STOCK BADGE */}
+
+                            {isOutOfStock && (
+                                <span className="absolute top-4 left-4 z-30 px-4 py-2 rounded-full text-xs font-bold text-white bg-[#5B4B75] shadow-lg">
+                                    OUT OF STOCK
                                 </span>
                             )}
 
@@ -697,6 +936,7 @@ const Product = () => {
 
                             {!isZoomed && (
                                 <div className="flex absolute bottom-4 left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-sm text-[10px] text-[#5B4B75]/60 pointer-events-none opacity-0 md:hover:opacity-100">
+
                                     <svg
                                         width="13"
                                         height="13"
@@ -726,8 +966,10 @@ const Product = () => {
                                     <span className="md:hidden">
                                         Tap and hold to zoom
                                     </span>
+
                                 </div>
                             )}
+
                         </div>
 
                         {/* THUMBNAILS */}
@@ -739,6 +981,7 @@ const Product = () => {
                                     image,
                                     index
                                 ) => {
+
                                     const active =
                                         (mainImage ||
                                             productData
@@ -786,6 +1029,7 @@ const Product = () => {
                                     );
                                 }
                             )}
+
                         </div>
                     </div>
 
@@ -804,6 +1048,7 @@ const Product = () => {
                             {
                                 productData.category
                             }
+
                         </span>
 
                         {/* NAME */}
@@ -850,11 +1095,13 @@ const Product = () => {
                                     width={16}
                                     height={16}
                                 />
+
                             </div>
 
                             <p className="text-sm text-[#5B4B75]/60">
                                 (4.5)
                             </p>
+
                         </div>
 
                         {/* DESCRIPTION */}
@@ -870,72 +1117,94 @@ const Product = () => {
                         <div className="mt-6 rounded-2xl bg-gradient-to-br from-[#FAF9FF] to-white border border-[#EDEBFB] p-5 shadow-sm">
 
                             <p className="text-xs font-bold uppercase tracking-widest text-[#5B4B75]/50 mb-1.5">
+
                                 {selectedSize
                                     ? `Price for ${selectedSize}`
                                     : "Special price"}
+
                             </p>
 
                             <div className="flex items-baseline gap-3 flex-wrap">
 
                                 <p className="text-4xl font-serif bg-gradient-to-r from-[#2E1A47] to-[#6D3FD6] bg-clip-text text-transparent">
+
                                     {
                                         currency
                                     }
+
                                     {
                                         currentOfferPrice
                                     }
+
                                 </p>
 
                                 {discountPercent >
                                     0 && (
                                     <>
                                         <p className="text-base text-[#5B4B75]/40">
+
                                             M.R.P.:{" "}
+
                                             <span className="line-through">
+
                                                 {
                                                     currency
                                                 }
+
                                                 {
                                                     currentPrice
                                                 }
+
                                             </span>
+
                                         </p>
 
                                         <span className="text-sm font-semibold text-[#2E7D6B] px-2.5 py-1 rounded-full bg-[#2E7D6B]/8">
+
                                             You save{" "}
+
                                             {
                                                 currency
                                             }
+
                                             {(
                                                 currentPrice -
                                                 currentOfferPrice
                                             ).toFixed(
                                                 2
-                                            )}{" "}
+                                            )}
+
+                                            {" "}
+
                                             (
                                             {
                                                 discountPercent
                                             }
                                             %)
+
                                         </span>
                                     </>
                                 )}
+
                             </div>
 
                             <p className="text-xs text-[#5B4B75]/40 mt-2">
                                 Inclusive of all taxes
                             </p>
+
                         </div>
 
-                        {/* SIZE */}
+                        {/* SIZE / AGE */}
 
                         {productData.sizes &&
                             productData.sizes
                                 .length >
                                 0 && (
+
                                 <div className="mt-7">
 
                                     <p className="text-sm font-semibold text-[#2E1A47] mb-3">
+
                                         {productData.sizingMode ===
                                         "age"
                                             ? "Select age"
@@ -945,6 +1214,7 @@ const Product = () => {
                                             {" "}
                                             *
                                         </span>
+
                                     </p>
 
                                     <div className="flex flex-wrap gap-2.5">
@@ -953,9 +1223,19 @@ const Product = () => {
                                             (
                                                 size
                                             ) => {
+
                                                 const active =
                                                     selectedSize ===
                                                     size;
+
+                                                const stock =
+                                                    getStock(
+                                                        size
+                                                    );
+
+                                                const outOfStock =
+                                                    stock <=
+                                                    0;
 
                                                 return (
                                                     <button
@@ -963,18 +1243,38 @@ const Product = () => {
                                                             size
                                                         }
                                                         type="button"
-                                                        onClick={() =>
+                                                        disabled={
+                                                            outOfStock
+                                                        }
+                                                        onClick={() => {
+
+                                                            if (
+                                                                outOfStock
+                                                            ) {
+                                                                toast.error(
+                                                                    productData.sizingMode ===
+                                                                        "age"
+                                                                        ? `${size} is out of stock`
+                                                                        : `Size ${size} is out of stock`
+                                                                );
+
+                                                                return;
+                                                            }
+
                                                             setSelectedSize(
                                                                 size
-                                                            )
-                                                        }
+                                                            );
+                                                        }}
                                                         className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-                                                            active
+                                                            outOfStock
+                                                                ? "text-[#5B4B75]/30 bg-[#F5F3F8] border-[#EDEBFB] cursor-not-allowed line-through"
+                                                                : active
                                                                 ? "text-white border-transparent scale-105"
                                                                 : "text-[#2E1A47]/70 bg-white border-[#2E1A47]/15 hover:border-[#8B5CF6]"
                                                         }`}
                                                         style={
-                                                            active
+                                                            active &&
+                                                            !outOfStock
                                                                 ? {
                                                                       background:
                                                                           "linear-gradient(135deg, #8B5CF6 0%, #6D3FD6 100%)",
@@ -985,67 +1285,116 @@ const Product = () => {
                                                         {
                                                             size
                                                         }
+
+                                                        {outOfStock && (
+                                                            <span className="ml-1 text-[9px] font-bold no-underline">
+                                                                OUT
+                                                            </span>
+                                                        )}
                                                     </button>
                                                 );
                                             }
                                         )}
+
                                     </div>
 
+                                    {/* SELECTED SIZE / AGE STOCK */}
+
                                     {selectedSize && (
-                                        <div className="mt-4 flex items-center justify-between rounded-xl bg-[#FAF9FF] border border-[#EDEBFB] px-4 py-3">
+                                        <div className="mt-4 rounded-xl bg-[#FAF9FF] border border-[#EDEBFB] px-4 py-3">
 
-                                            <div>
-                                                <p className="text-xs text-[#5B4B75]/50">
-                                                    Selected{" "}
-                                                    {
-                                                        productData.sizingMode ===
-                                                        "age"
-                                                            ? "age"
-                                                            : "size"
-                                                    }
-                                                </p>
+                                            <div className="flex items-center justify-between">
 
-                                                <p className="text-sm font-semibold text-[#2E1A47]">
-                                                    {
-                                                        selectedSize
-                                                    }
-                                                </p>
-                                            </div>
+                                                <div>
 
-                                            <div className="text-right">
+                                                    <p className="text-xs text-[#5B4B75]/50">
 
-                                                <p className="text-lg font-bold text-[#6D3FD6]">
-                                                    {
-                                                        currency
-                                                    }
-                                                    {
-                                                        currentOfferPrice
-                                                    }
-                                                </p>
+                                                        Selected{" "}
 
-                                                {currentPrice >
-                                                    currentOfferPrice && (
-                                                    <p className="text-xs text-[#5B4B75]/40 line-through">
+                                                        {
+                                                            productData.sizingMode ===
+                                                            "age"
+                                                                ? "age"
+                                                                : "size"
+                                                        }
+
+                                                    </p>
+
+                                                    <p className="text-sm font-semibold text-[#2E1A47]">
+                                                        {
+                                                            selectedSize
+                                                        }
+                                                    </p>
+
+                                                </div>
+
+                                                <div className="text-right">
+
+                                                    <p
+                                                        className={`text-sm font-bold ${
+                                                            selectedSizeOutOfStock
+                                                                ? "text-[#E8578E]"
+                                                                : selectedStock <=
+                                                                    3
+                                                                ? "text-[#D97706]"
+                                                                : "text-[#2E7D6B]"
+                                                        }`}
+                                                    >
+
+                                                        {selectedSizeOutOfStock
+                                                            ? "Out of Stock"
+                                                            : selectedStock <=
+                                                              3
+                                                            ? `Only ${selectedStock} left`
+                                                            : `${selectedStock} in stock`}
+
+                                                    </p>
+
+                                                    <p className="text-lg font-bold text-[#6D3FD6]">
+
                                                         {
                                                             currency
                                                         }
+
                                                         {
-                                                            currentPrice
+                                                            currentOfferPrice
                                                         }
+
                                                     </p>
-                                                )}
+
+                                                    {currentPrice >
+                                                        currentOfferPrice && (
+                                                        <p className="text-xs text-[#5B4B75]/40 line-through">
+
+                                                            {
+                                                                currency
+                                                            }
+
+                                                            {
+                                                                currentPrice
+                                                            }
+
+                                                        </p>
+                                                    )}
+
+                                                </div>
+
                                             </div>
+
                                         </div>
                                     )}
 
                                     {!selectedSize && (
                                         <p className="text-xs text-[#5B4B75]/40 mt-2.5">
+
                                             {productData.sizingMode ===
                                             "age"
                                                 ? "Please select an age range before adding to cart."
                                                 : "Please select a size before adding to cart."}
+
                                         </p>
                                     )}
+
                                 </div>
                             )}
 
@@ -1084,10 +1433,12 @@ const Product = () => {
                                 {selectedSize && (
                                     <>
                                         <p className="text-[#5B4B75]/60 font-medium">
+
                                             {productData.sizingMode ===
                                             "age"
                                                 ? "Age"
                                                 : "Size"}
+
                                         </p>
 
                                         <p className="text-[#2E1A47] font-medium">
@@ -1097,7 +1448,9 @@ const Product = () => {
                                         </p>
                                     </>
                                 )}
+
                             </div>
+
                         </div>
 
                         {/* CART */}
@@ -1124,7 +1477,9 @@ const Product = () => {
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D6B]" />
                                 Quality checked
                             </span>
+
                         </div>
+
                     </div>
                 </div>
 
@@ -1147,13 +1502,17 @@ const Product = () => {
                         You might also like
 
                         <span className="w-6 h-px bg-gradient-to-l from-transparent to-[#8B5CF6]" />
+
                     </span>
 
                     <h2 className="text-2xl md:text-3xl font-serif tracking-tight text-[#2E1A47] text-center">
+
                         More from{" "}
+
                         {
                             productData.category
                         }
+
                     </h2>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 mt-10 pb-14 w-full">
@@ -1177,14 +1536,17 @@ const Product = () => {
                                         }
                                         className="transition-transform duration-300 hover:-translate-y-1.5"
                                     >
+
                                         <ProductCard
                                             product={
                                                 product
                                             }
                                         />
+
                                     </div>
                                 )
                             )}
+
                     </div>
 
                     <button
@@ -1212,8 +1574,11 @@ const Product = () => {
                                 strokeLinejoin="round"
                             />
                         </svg>
+
                     </button>
+
                 </div>
+
             </main>
 
             <Footer />

@@ -1,7 +1,7 @@
 import { Inngest } from "inngest";
 import { BrevoClient } from "@getbrevo/brevo";
 
-import connectDB from "./db";
+import connectDB from "@/config/db";
 import User from "@/models/User";
 import Product from "@/models/Product";
 import Order from "@/models/Order";
@@ -22,6 +22,540 @@ export const inngest = new Inngest({
 const brevo = new BrevoClient({
     apiKey: process.env.BREVO_API_KEY,
 });
+
+// =====================================================
+// SEND ORDER STATUS EMAIL
+// =====================================================
+
+const sendOrderStatusEmail = async ({
+    user,
+    order,
+    status,
+}) => {
+    if (!user?.email) {
+        console.warn(
+            `Cannot send status email. No email found for user: ${user?._id}`
+        );
+
+        return {
+            success: false,
+            reason: "email_missing",
+        };
+    }
+
+    // =====================================================
+    // STATUS CONTENT
+    // =====================================================
+
+    let title = "";
+    let message = "";
+    let emoji = "";
+
+    if (status === "Dispatched") {
+        title = "Your order has been dispatched! 🚚";
+
+        message =
+            "Great news! Your Sunshine Fancy Costumes order has been dispatched and is now on its way to you.";
+
+        emoji = "🚚";
+    } else if (status === "Delivered") {
+        title = "Your order has been delivered! 🎉";
+
+        message =
+            "Your Sunshine Fancy Costumes order has been successfully delivered. We hope you love your costume!";
+
+        emoji = "🎉";
+    } else {
+        title = "Your order status has been updated";
+
+        message =
+            `Your order status is now ${status}.`;
+
+        emoji = "📦";
+    }
+
+    // =====================================================
+    // ORDER ITEMS
+    // =====================================================
+
+    const itemsHtml =
+        order.items
+            ?.map((item) => {
+                const productName =
+                    item.product?.name ||
+                    item.name ||
+                    "Product";
+
+                const quantity =
+                    Number(item.quantity) || 1;
+
+                const size =
+                    item.size || "";
+
+                return `
+                    <div
+                        style="
+                            padding: 16px 0;
+                            border-bottom: 1px solid #eee8f5;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size: 15px;
+                                font-weight: 700;
+                                color: #2E1A47;
+                            "
+                        >
+                            ${productName}
+                        </div>
+
+                        ${
+                            size
+                                ? `
+                                    <div
+                                        style="
+                                            margin-top: 5px;
+                                            font-size: 13px;
+                                            color: #786A8F;
+                                        "
+                                    >
+                                        Size: ${size}
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                        <div
+                            style="
+                                margin-top: 5px;
+                                font-size: 13px;
+                                color: #786A8F;
+                            "
+                        >
+                            Quantity: ${quantity}
+                        </div>
+
+                    </div>
+                `;
+            })
+            .join("") || "";
+
+    // =====================================================
+    // SEND EMAIL
+    // =====================================================
+
+    try {
+        const emailResult =
+            await brevo.transactionalEmails.sendTransacEmail(
+                {
+                    sender: {
+                        name: "Sunshine Fancy Costumes",
+                        email: "shrekarreddy6@gmail.com",
+                    },
+
+                    to: [
+                        {
+                            email: user.email,
+                            name:
+                                user.name ||
+                                "Customer",
+                        },
+                    ],
+
+                    subject:
+                        `${title} - Sunshine Fancy Costumes`,
+
+                    htmlContent: `
+                        <!DOCTYPE html>
+
+                        <html>
+
+                        <head>
+                            <meta charset="UTF-8" />
+
+                            <meta
+                                name="viewport"
+                                content="width=device-width, initial-scale=1.0"
+                            />
+
+                            <title>
+                                ${title}
+                            </title>
+                        </head>
+
+                        <body
+                            style="
+                                margin: 0;
+                                padding: 0;
+                                background: #f7f5fb;
+                                font-family: Arial, Helvetica, sans-serif;
+                                color: #2E1A47;
+                            "
+                        >
+
+                            <div
+                                style="
+                                    max-width: 620px;
+                                    margin: 30px auto;
+                                    padding: 0 12px;
+                                "
+                            >
+
+                                <div
+                                    style="
+                                        background: #ffffff;
+                                        border-radius: 22px;
+                                        overflow: hidden;
+                                        border: 1px solid #EDEBFB;
+                                    "
+                                >
+
+                                    <!-- HEADER -->
+
+                                    <div
+                                        style="
+                                            padding: 38px 25px;
+                                            text-align: center;
+                                            background: linear-gradient(
+                                                135deg,
+                                                #8B5CF6,
+                                                #6D3FD6
+                                            );
+                                        "
+                                    >
+
+                                        <div
+                                            style="
+                                                font-size: 30px;
+                                                font-weight: 800;
+                                                color: #ffffff;
+                                            "
+                                        >
+                                            Sunshine
+                                        </div>
+
+                                        <div
+                                            style="
+                                                margin-top: 7px;
+                                                font-size: 14px;
+                                                color: rgba(
+                                                    255,
+                                                    255,
+                                                    255,
+                                                    0.9
+                                                );
+                                            "
+                                        >
+                                            Fancy Costumes
+                                        </div>
+
+                                    </div>
+
+                                    <!-- CONTENT -->
+
+                                    <div
+                                        style="
+                                            padding: 35px 30px;
+                                        "
+                                    >
+
+                                        <!-- ICON -->
+
+                                        <div
+                                            style="
+                                                text-align: center;
+                                            "
+                                        >
+
+                                            <div
+                                                style="
+                                                    width: 70px;
+                                                    height: 70px;
+                                                    margin: 0 auto 18px;
+                                                    border-radius: 50%;
+                                                    background: #F0EBFF;
+                                                    line-height: 70px;
+                                                    font-size: 32px;
+                                                "
+                                            >
+                                                ${emoji}
+                                            </div>
+
+                                            <h1
+                                                style="
+                                                    margin: 0;
+                                                    font-size: 25px;
+                                                    color: #2E1A47;
+                                                "
+                                            >
+                                                ${title}
+                                            </h1>
+
+                                        </div>
+
+                                        <!-- GREETING -->
+
+                                        <p
+                                            style="
+                                                margin: 30px 0 0;
+                                                font-size: 16px;
+                                                line-height: 1.7;
+                                                color: #2E1A47;
+                                            "
+                                        >
+                                            Hi
+                                            <strong>
+                                                ${
+                                                    user.name ||
+                                                    "there"
+                                                }
+                                            </strong>,
+                                        </p>
+
+                                        <p
+                                            style="
+                                                margin: 8px 0 0;
+                                                font-size: 14px;
+                                                line-height: 1.7;
+                                                color: #665777;
+                                            "
+                                        >
+                                            ${message}
+                                        </p>
+
+                                        <!-- STATUS -->
+
+                                        <div
+                                            style="
+                                                margin-top: 25px;
+                                                padding: 20px;
+                                                background: #FAF9FF;
+                                                border: 1px solid #EDEBFB;
+                                                border-radius: 18px;
+                                                text-align: center;
+                                            "
+                                        >
+
+                                            <div
+                                                style="
+                                                    font-size: 11px;
+                                                    font-weight: 800;
+                                                    text-transform: uppercase;
+                                                    letter-spacing: 1.5px;
+                                                    color: #8B5CF6;
+                                                "
+                                            >
+                                                Current Order Status
+                                            </div>
+
+                                            <div
+                                                style="
+                                                    margin-top: 9px;
+                                                    font-size: 20px;
+                                                    font-weight: 800;
+                                                    color: #2E1A47;
+                                                "
+                                            >
+                                                ${status}
+                                            </div>
+
+                                        </div>
+
+                                        <!-- ORDER ITEMS -->
+
+                                        <div
+                                            style="
+                                                margin-top: 20px;
+                                                padding: 22px;
+                                                border: 1px solid #EDEBFB;
+                                                border-radius: 18px;
+                                            "
+                                        >
+
+                                            <div
+                                                style="
+                                                    margin-bottom: 5px;
+                                                    font-size: 12px;
+                                                    font-weight: 800;
+                                                    text-transform: uppercase;
+                                                    letter-spacing: 1.5px;
+                                                    color: #8B5CF6;
+                                                "
+                                            >
+                                                Your Order
+                                            </div>
+
+                                            ${itemsHtml}
+
+                                        </div>
+
+                                        <!-- TOTAL -->
+
+                                        <div
+                                            style="
+                                                margin-top: 20px;
+                                                padding: 20px;
+                                                background: #FAF9FF;
+                                                border-radius: 18px;
+                                                border: 1px solid #EDEBFB;
+                                            "
+                                        >
+
+                                            <table
+                                                width="100%"
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                style="
+                                                    border-collapse: collapse;
+                                                "
+                                            >
+
+                                                <tr>
+
+                                                    <td
+                                                        style="
+                                                            font-size: 14px;
+                                                            color: #665777;
+                                                        "
+                                                    >
+                                                        Order Total
+                                                    </td>
+
+                                                    <td
+                                                        align="right"
+                                                        style="
+                                                            font-size: 18px;
+                                                            font-weight: 800;
+                                                            color: #2E1A47;
+                                                        "
+                                                    >
+                                                        ₹${order.amount}
+                                                    </td>
+
+                                                </tr>
+
+                                            </table>
+
+                                        </div>
+
+                                        <!-- PAYMENT -->
+
+                                        <div
+                                            style="
+                                                margin-top: 15px;
+                                                padding: 15px;
+                                                background: #FFF9E8;
+                                                border-radius: 14px;
+                                                text-align: center;
+                                                font-size: 13px;
+                                                color: #786A8F;
+                                            "
+                                        >
+                                            Payment Method:
+                                            <strong>
+                                                Cash on Delivery
+                                            </strong>
+                                        </div>
+
+                                        <!-- FOOTER MESSAGE -->
+
+                                        <div
+                                            style="
+                                                margin-top: 25px;
+                                                padding: 20px;
+                                                background: #F6F1FF;
+                                                border-radius: 16px;
+                                                text-align: center;
+                                            "
+                                        >
+
+                                            <p
+                                                style="
+                                                    margin: 0;
+                                                    font-size: 14px;
+                                                    line-height: 1.7;
+                                                    color: #5B4B75;
+                                                "
+                                            >
+                                                ${
+                                                    status ===
+                                                    "Delivered"
+                                                        ? "Thank you for shopping with Sunshine Fancy Costumes! ❤️"
+                                                        : "Thank you for choosing Sunshine Fancy Costumes! ❤️"
+                                                }
+                                            </p>
+
+                                        </div>
+
+                                        <!-- FOOTER -->
+
+                                        <div
+                                            style="
+                                                margin-top: 30px;
+                                                padding-top: 22px;
+                                                border-top: 1px solid #eee8f5;
+                                                text-align: center;
+                                            "
+                                        >
+
+                                            <p
+                                                style="
+                                                    margin: 0;
+                                                    font-size: 13px;
+                                                    color: #786A8F;
+                                                "
+                                            >
+                                                Thank you for shopping with us
+                                            </p>
+
+                                            <p
+                                                style="
+                                                    margin: 7px 0 0;
+                                                    font-size: 14px;
+                                                    font-weight: 700;
+                                                    color: #8B5CF6;
+                                                "
+                                            >
+                                                Sunshine Fancy Costumes
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </body>
+
+                        </html>
+                    `,
+                }
+            );
+
+        console.log(
+            `ORDER STATUS EMAIL SENT: ${status}`,
+            emailResult
+        );
+
+        return {
+            success: true,
+        };
+
+    } catch (error) {
+        console.error(
+            `ORDER STATUS EMAIL ERROR (${status}):`,
+            error
+        );
+
+        return {
+            success: false,
+            error: error.message,
+        };
+    }
+};
 
 // =====================================================
 // SYNC USER CREATION
@@ -46,24 +580,12 @@ export const syncUserCreation =
                 image_url,
             } = event.data;
 
-            const userData = {
-                _id: id,
-
-                email:
-                    email_addresses?.[0]
-                        ?.email_address,
-
-                name:
-                    `${first_name ?? ""} ${last_name ?? ""}`
-                        .trim(),
-
-                imageUrl:
-                    image_url || "",
-            };
-
             await connectDB();
 
-            if (!userData.email) {
+            const email =
+                email_addresses?.[0]?.email_address;
+
+            if (!email) {
                 console.error(
                     "Cannot create user: email address is missing"
                 );
@@ -74,9 +596,22 @@ export const syncUserCreation =
                 };
             }
 
+            const userData = {
+                _id: id,
+
+                email,
+
+                name:
+                    `${first_name ?? ""} ${
+                        last_name ?? ""
+                    }`.trim(),
+
+                imageUrl: image_url || "",
+            };
+
             const existingByEmail =
                 await User.findOne({
-                    email: userData.email,
+                    email,
                 });
 
             if (
@@ -84,7 +619,7 @@ export const syncUserCreation =
                 existingByEmail._id !== id
             ) {
                 console.warn(
-                    `Skipping create: email ${userData.email} already exists under a different id`
+                    `Email ${email} already belongs to another user`
                 );
 
                 return {
@@ -103,6 +638,11 @@ export const syncUserCreation =
                 }
             );
 
+            console.log(
+                "USER CREATED/SYNCED:",
+                id
+            );
+
             return {
                 success: true,
             };
@@ -110,7 +650,7 @@ export const syncUserCreation =
     );
 
 // =====================================================
-// SYNC USER UPDATION
+// SYNC USER UPDATE
 // =====================================================
 
 export const syncUserUpdation =
@@ -132,37 +672,29 @@ export const syncUserUpdation =
                 image_url,
             } = event.data;
 
-            const userData = {
-                _id: id,
+            await connectDB();
 
+            const userData = {
                 email:
                     email_addresses?.[0]
                         ?.email_address,
 
                 name:
-                    `${first_name ?? ""} ${last_name ?? ""}`
-                        .trim(),
+                    `${first_name ?? ""} ${
+                        last_name ?? ""
+                    }`.trim(),
 
-                imageUrl:
-                    image_url || "",
+                imageUrl: image_url || "",
             };
-
-            await connectDB();
-
-            if (!userData.email) {
-                console.error(
-                    "Cannot update user: email address is missing"
-                );
-
-                return {
-                    success: false,
-                    reason: "email_missing",
-                };
-            }
 
             await User.findByIdAndUpdate(
                 id,
                 userData
+            );
+
+            console.log(
+                "USER UPDATED:",
+                id
             );
 
             return {
@@ -192,6 +724,11 @@ export const syncUserDeletion =
 
             await User.findByIdAndDelete(id);
 
+            console.log(
+                "USER DELETED:",
+                id
+            );
+
             return {
                 success: true,
             };
@@ -206,813 +743,899 @@ export const createUserOrder =
     inngest.createFunction(
         {
             id: "create-user-order",
-
-            batchEvents: {
-                maxSize: 5,
-                timeout: "5s",
-            },
         },
 
         {
             event: "order/created",
         },
 
-        async ({ events }) => {
+        async ({ event }) => {
             try {
-                // =================================================
-                // CONNECT DATABASE
-                // =================================================
+                console.log(
+                    "================================="
+                );
+
+                console.log(
+                    "CREATE USER ORDER FUNCTION STARTED"
+                );
+
+                console.log(
+                    "EVENT:",
+                    JSON.stringify(
+                        event.data,
+                        null,
+                        2
+                    )
+                );
+
+                console.log(
+                    "================================="
+                );
 
                 await connectDB();
 
-                const orders = [];
+                const {
+                    userId,
+                    items,
+                    amount,
+                    address,
+                    date,
+                } = event.data;
 
                 // =================================================
-                // PROCESS EVENTS
+                // VALIDATE EVENT
                 // =================================================
 
-                for (const event of events) {
-                    const {
-                        userId,
-                        items,
-                        amount,
-                        subtotal,
-                        tax,
-                        address,
-                        date,
-                    } = event.data;
+                if (
+                    !userId ||
+                    !Array.isArray(items) ||
+                    items.length === 0
+                ) {
+                    throw new Error(
+                        "Invalid order event data"
+                    );
+                }
 
-                    // =============================================
-                    // FIND USER
-                    // =============================================
+                // =================================================
+                // FIND USER
+                // =================================================
 
-                    const user =
-                        await User.findById(
-                            userId
+                const user =
+                    await User.findById(userId);
+
+                if (!user) {
+                    throw new Error(
+                        `User not found: ${userId}`
+                    );
+                }
+
+                // =================================================
+                // FIND ADDRESS
+                // =================================================
+
+                let deliveryAddress = null;
+
+                try {
+                    if (
+                        typeof address ===
+                        "string"
+                    ) {
+                        deliveryAddress =
+                            await Address.findById(
+                                address
+                            );
+                    } else if (
+                        address &&
+                        typeof address ===
+                            "object"
+                    ) {
+                        deliveryAddress =
+                            address;
+                    }
+                } catch (addressError) {
+                    console.error(
+                        "ADDRESS LOOKUP ERROR:",
+                        addressError
+                    );
+                }
+
+                // =================================================
+                // DECREASE INVENTORY
+                // =================================================
+
+                for (const item of items) {
+                    const product =
+                        await Product.findById(
+                            item.product
                         );
 
-                    if (!user) {
-                        console.error(
-                            `User not found: ${userId}`
+                    if (!product) {
+                        throw new Error(
+                            `Product not found: ${item.product}`
                         );
-
-                        continue;
                     }
 
-                    // =============================================
-                    // FIND ACTUAL ADDRESS
-                    // =============================================
+                    const quantity =
+                        Number(item.quantity) || 1;
 
-                    let deliveryAddress = null;
+                    const size =
+                        item.size?.trim() || "";
 
-                    try {
-                        // If checkout sent an address ID
+                    console.log(
+                        "================================="
+                    );
+
+                    console.log(
+                        "PROCESSING INVENTORY"
+                    );
+
+                    console.log(
+                        "PRODUCT:",
+                        product.name
+                    );
+
+                    console.log(
+                        "PRODUCT ID:",
+                        product._id.toString()
+                    );
+
+                    console.log(
+                        "SIZE:",
+                        size || "NO SIZE"
+                    );
+
+                    console.log(
+                        "QUANTITY:",
+                        quantity
+                    );
+
+                    console.log(
+                        "INVENTORY BEFORE:",
+                        product.inventory
+                    );
+
+                    // =================================================
+                    // SIZE INVENTORY
+                    // =================================================
+
+                    if (size) {
                         if (
-                            typeof address ===
-                            "string"
+                            !product.inventory
                         ) {
-                            deliveryAddress =
-                                await Address.findById(
-                                    address
-                                );
-                        }
-
-                        // If an address object was already sent
-                        else if (
-                            address &&
-                            typeof address ===
-                                "object"
-                        ) {
-                            deliveryAddress =
-                                address;
-                        }
-
-                        if (
-                            !deliveryAddress
-                        ) {
-                            console.warn(
-                                `Address not found: ${address}`
+                            throw new Error(
+                                `${product.name} does not have inventory configured`
                             );
                         }
-                    } catch (addressError) {
-                        console.error(
-                            "ADDRESS LOOKUP ERROR:",
-                            addressError
+
+                        let currentStock;
+
+                        if (
+                            product.inventory instanceof
+                            Map
+                        ) {
+                            currentStock =
+                                product.inventory.get(
+                                    size
+                                );
+                        } else {
+                            currentStock =
+                                product.inventory[
+                                    size
+                                ];
+                        }
+
+                        console.log(
+                            "CURRENT STOCK:",
+                            currentStock
+                        );
+
+                        if (
+                            currentStock ===
+                                undefined ||
+                            currentStock === null
+                        ) {
+                            throw new Error(
+                                `Size ${size} is not available for ${product.name}`
+                            );
+                        }
+
+                        if (
+                            Number(
+                                currentStock
+                            ) < quantity
+                        ) {
+                            throw new Error(
+                                `Not enough stock for ${product.name} (${size}). Available: ${currentStock}`
+                            );
+                        }
+
+                        const newStock =
+                            Number(
+                                currentStock
+                            ) - quantity;
+
+                        // =================================================
+                        // UPDATE MAP
+                        // =================================================
+
+                        if (
+                            product.inventory instanceof
+                            Map
+                        ) {
+                            product.inventory.set(
+                                size,
+                                newStock
+                            );
+                        } else {
+                            product.inventory[
+                                size
+                            ] = newStock;
+                        }
+
+                        product.markModified(
+                            "inventory"
+                        );
+
+                        console.log(
+                            "NEW STOCK:",
+                            newStock
                         );
                     }
 
-                    // =============================================
-                    // GET PRODUCT DETAILS
-                    // =============================================
+                    // =================================================
+                    // NON-SIZE INVENTORY
+                    // =================================================
 
-                    const emailItems =
-                        await Promise.all(
-                            items.map(
-                                async (item) => {
-                                    const product =
-                                        await Product.findById(
-                                            item.product
-                                        );
+                    else {
+                        let currentStock =
+                            Number(
+                                product.inventory
+                            );
 
-                                    if (!product) {
-                                        return {
-                                            name:
-                                                "Product",
+                        if (
+                            Number.isNaN(
+                                currentStock
+                            )
+                        ) {
+                            throw new Error(
+                                `Invalid inventory for ${product.name}`
+                            );
+                        }
 
-                                            quantity:
-                                                Number(
-                                                    item.quantity
-                                                ) || 1,
+                        if (
+                            currentStock <
+                            quantity
+                        ) {
+                            throw new Error(
+                                `Not enough stock for ${product.name}. Available: ${currentStock}`
+                            );
+                        }
 
-                                            price: 0,
+                        product.inventory =
+                            currentStock -
+                            quantity;
+                    }
 
-                                            size:
-                                                item.size ||
-                                                "",
-                                        };
+                    // =================================================
+                    // SAVE PRODUCT
+                    // =================================================
+
+                    await product.save();
+
+                    console.log(
+                        "INVENTORY UPDATED:",
+                        product.name,
+                        size
+                            ? `Size: ${size}`
+                            : "No size",
+                        quantity
+                    );
+
+                    console.log(
+                        "INVENTORY AFTER:",
+                        product.inventory
+                    );
+
+                    console.log(
+                        "================================="
+                    );
+                }
+
+                // =================================================
+                // GET PRODUCT DETAILS
+                // =================================================
+
+                const emailItems =
+                    await Promise.all(
+                        items.map(
+                            async (item) => {
+                                const product =
+                                    await Product.findById(
+                                        item.product
+                                    );
+
+                                return {
+                                    name:
+                                        product?.name ||
+                                        "Product",
+
+                                    quantity:
+                                        Number(
+                                            item.quantity
+                                        ) || 1,
+
+                                    price:
+                                        Number(
+                                            product?.offerPrice
+                                        ) || 0,
+
+                                    size:
+                                        item.size ||
+                                        "",
+                                };
+                            }
+                        )
+                    );
+
+                // =================================================
+                // CREATE ORDER
+                // =================================================
+
+                const orderData = {
+                    userId,
+
+                    items,
+
+                    amount,
+
+                    address,
+
+                    date:
+                        date ||
+                        Date.now(),
+                };
+
+                const createdOrder =
+                    await Order.create(
+                        orderData
+                    );
+
+                console.log(
+                    "================================="
+                );
+
+                console.log(
+                    "ORDER CREATED SUCCESSFULLY"
+                );
+
+                console.log(
+                    "ORDER ID:",
+                    createdOrder._id.toString()
+                );
+
+                console.log(
+                    "================================="
+                );
+
+                // =================================================
+                // ORDER ITEMS HTML
+                // =================================================
+
+                const itemsHtml =
+                    emailItems
+                        .map((item) => {
+                            const itemTotal =
+                                item.price *
+                                item.quantity;
+
+                            return `
+                                <div
+                                    style="
+                                        padding: 18px 0;
+                                        border-bottom: 1px solid #eee8f5;
+                                    "
+                                >
+
+                                    <div
+                                        style="
+                                            font-size: 15px;
+                                            font-weight: 700;
+                                            color: #2E1A47;
+                                        "
+                                    >
+                                        ${item.name}
+                                    </div>
+
+                                    ${
+                                        item.size
+                                            ? `
+                                                <div
+                                                    style="
+                                                        margin-top: 5px;
+                                                        font-size: 13px;
+                                                        color: #786A8F;
+                                                    "
+                                                >
+                                                    Size: ${item.size}
+                                                </div>
+                                            `
+                                            : ""
                                     }
 
-                                    return {
-                                        name:
-                                            product.name,
+                                    <div
+                                        style="
+                                            margin-top: 5px;
+                                            font-size: 13px;
+                                            color: #786A8F;
+                                        "
+                                    >
+                                        Quantity:
+                                        ${item.quantity}
+                                    </div>
 
-                                        quantity:
-                                            Number(
-                                                item.quantity
-                                            ) || 1,
+                                    <div
+                                        style="
+                                            margin-top: 8px;
+                                            font-size: 15px;
+                                            font-weight: 700;
+                                            color: #2E1A47;
+                                        "
+                                    >
+                                        ₹${itemTotal}
+                                    </div>
 
-                                        price:
-                                            Number(
-                                                product.offerPrice
-                                            ) || 0,
+                                </div>
+                            `;
+                        })
+                        .join("");
 
-                                        size:
-                                            item.size ||
-                                            "",
-                                    };
-                                }
-                            )
-                        );
+                // =================================================
+                // ADDRESS VALUES
+                // =================================================
 
-                    // =============================================
-                    // CREATE ORDER
-                    //
-                    // IMPORTANT:
-                    // We still save the original address ID.
-                    // So your existing Order schema continues
-                    // working exactly as before.
-                    // =============================================
+                const fullName =
+                    deliveryAddress?.fullName ||
+                    "";
 
-                    const order = {
-                        userId,
+                const phoneNumber =
+                    deliveryAddress?.phoneNumber ||
+                    "";
 
-                        items,
+                const area =
+                    deliveryAddress?.area ||
+                    "";
 
-                        amount,
+                const city =
+                    deliveryAddress?.city ||
+                    "";
 
-                        address,
+                const state =
+                    deliveryAddress?.state ||
+                    "";
 
-                        date,
-                    };
+                const pincode =
+                    deliveryAddress?.pincode ||
+                    "";
 
-                    orders.push(order);
+                const country =
+                    deliveryAddress?.country ||
+                    "India";
 
-                    // =============================================
-                    // CREATE ITEMS HTML
-                    // =============================================
+                // =================================================
+                // ADDRESS HTML
+                // =================================================
 
-                    const itemsHtml =
-                        emailItems
-                            .map(
-                                (item) => {
-                                    const itemTotal =
-                                        item.price *
-                                        item.quantity;
+                const addressHtml = `
+                    <div
+                        style="
+                            margin-top: 28px;
+                            padding: 24px;
+                            background: #FAF9FF;
+                            border: 1px solid #EDEBFB;
+                            border-radius: 18px;
+                        "
+                    >
 
-                                    return `
-                                        <div
-                                            style="
-                                                padding: 18px 0;
-                                                border-bottom: 1px solid #eee8f5;
-                                            "
-                                        >
-
-                                            <div
-                                                style="
-                                                    font-size: 15px;
-                                                    font-weight: 700;
-                                                    color: #2E1A47;
-                                                "
-                                            >
-                                                ${item.name}
-                                            </div>
-
-                                            ${
-                                                item.size
-                                                    ? `
-                                                        <div
-                                                            style="
-                                                                margin-top: 5px;
-                                                                font-size: 13px;
-                                                                color: #786A8F;
-                                                            "
-                                                        >
-                                                            Size: ${item.size}
-                                                        </div>
-                                                    `
-                                                    : ""
-                                            }
-
-                                            <div
-                                                style="
-                                                    margin-top: 5px;
-                                                    font-size: 13px;
-                                                    color: #786A8F;
-                                                "
-                                            >
-                                                Quantity:
-                                                ${item.quantity}
-                                            </div>
-
-                                            <div
-                                                style="
-                                                    margin-top: 8px;
-                                                    font-size: 15px;
-                                                    font-weight: 700;
-                                                    color: #2E1A47;
-                                                "
-                                            >
-                                                ₹${itemTotal}
-                                            </div>
-
-                                        </div>
-                                    `;
-                                }
-                            )
-                            .join("");
-
-                    // =============================================
-                    // ADDRESS VALUES
-                    // =============================================
-
-                    const fullName =
-                        deliveryAddress?.fullName ||
-                        "";
-
-                    const phoneNumber =
-                        deliveryAddress?.phoneNumber ||
-                        "";
-
-                    const area =
-                        deliveryAddress?.area ||
-                        "";
-
-                    const city =
-                        deliveryAddress?.city ||
-                        "";
-
-                    const state =
-                        deliveryAddress?.state ||
-                        "";
-
-                    const pincode =
-                        deliveryAddress?.pincode ||
-                        "";
-
-                    const country =
-                        deliveryAddress?.country ||
-                        "India";
-
-                    // =============================================
-                    // ADDRESS HTML
-                    // =============================================
-
-                    const addressHtml = `
                         <div
                             style="
-                                margin-top: 28px;
-                                padding: 24px;
-                                background: #FAF9FF;
-                                border: 1px solid #EDEBFB;
-                                border-radius: 18px;
+                                margin-bottom: 18px;
+                                font-size: 12px;
+                                font-weight: 800;
+                                text-transform: uppercase;
+                                letter-spacing: 1.5px;
+                                color: #8B5CF6;
                             "
                         >
-
-                            <div
-                                style="
-                                    margin-bottom: 18px;
-                                    font-size: 12px;
-                                    font-weight: 800;
-                                    text-transform: uppercase;
-                                    letter-spacing: 1.5px;
-                                    color: #8B5CF6;
-                                "
-                            >
-                                Delivery Address
-                            </div>
-
-                            ${
-                                fullName
-                                    ? `
-                                        <div
-                                            style="
-                                                margin-bottom: 12px;
-                                                font-size: 16px;
-                                                font-weight: 700;
-                                                color: #2E1A47;
-                                            "
-                                        >
-                                            ${fullName}
-                                        </div>
-                                    `
-                                    : ""
-                            }
-
-                            ${
-                                phoneNumber
-                                    ? `
-                                        <div
-                                            style="
-                                                margin-bottom: 9px;
-                                                font-size: 14px;
-                                                color: #5B4B75;
-                                            "
-                                        >
-                                            <strong>Phone:</strong>
-                                            ${phoneNumber}
-                                        </div>
-                                    `
-                                    : ""
-                            }
-
-                            ${
-                                area
-                                    ? `
-                                        <div
-                                            style="
-                                                margin-bottom: 7px;
-                                                font-size: 14px;
-                                                line-height: 1.6;
-                                                color: #5B4B75;
-                                            "
-                                        >
-                                            ${area}
-                                        </div>
-                                    `
-                                    : ""
-                            }
-
-                            ${
-                                city
-                                    ? `
-                                        <div
-                                            style="
-                                                margin-bottom: 7px;
-                                                font-size: 14px;
-                                                color: #5B4B75;
-                                            "
-                                        >
-                                            ${city}
-                                        </div>
-                                    `
-                                    : ""
-                            }
-
-                            ${
-                                state ||
-                                pincode
-                                    ? `
-                                        <div
-                                            style="
-                                                margin-bottom: 7px;
-                                                font-size: 14px;
-                                                color: #5B4B75;
-                                            "
-                                        >
-                                            ${state}${
-                                                state &&
-                                                pincode
-                                                    ? " - "
-                                                    : ""
-                                            }${pincode}
-                                        </div>
-                                    `
-                                    : ""
-                            }
-
-                            ${
-                                country
-                                    ? `
-                                        <div
-                                            style="
-                                                font-size: 14px;
-                                                color: #5B4B75;
-                                            "
-                                        >
-                                            ${country}
-                                        </div>
-                                    `
-                                    : ""
-                            }
-
+                            Delivery Address
                         </div>
-                    `;
 
-                    // =============================================
-                    // SEND EMAIL
-                    // =============================================
+                        ${
+                            fullName
+                                ? `
+                                    <div
+                                        style="
+                                            margin-bottom: 12px;
+                                            font-size: 16px;
+                                            font-weight: 700;
+                                            color: #2E1A47;
+                                        "
+                                    >
+                                        ${fullName}
+                                    </div>
+                                `
+                                : ""
+                        }
 
-                    if (!user.email) {
-                        console.warn(
-                            `No email found for user: ${userId}`
-                        );
+                        ${
+                            phoneNumber
+                                ? `
+                                    <div
+                                        style="
+                                            margin-bottom: 9px;
+                                            font-size: 14px;
+                                            color: #5B4B75;
+                                        "
+                                    >
+                                        <strong>Phone:</strong>
+                                        ${phoneNumber}
+                                    </div>
+                                `
+                                : ""
+                        }
 
-                        continue;
-                    }
+                        ${
+                            area
+                                ? `
+                                    <div
+                                        style="
+                                            margin-bottom: 7px;
+                                            font-size: 14px;
+                                            line-height: 1.6;
+                                            color: #5B4B75;
+                                        "
+                                    >
+                                        ${area}
+                                    </div>
+                                `
+                                : ""
+                        }
 
+                        ${
+                            city
+                                ? `
+                                    <div
+                                        style="
+                                            margin-bottom: 7px;
+                                            font-size: 14px;
+                                            color: #5B4B75;
+                                        "
+                                    >
+                                        ${city}
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                        ${
+                            state ||
+                            pincode
+                                ? `
+                                    <div
+                                        style="
+                                            margin-bottom: 7px;
+                                            font-size: 14px;
+                                            color: #5B4B75;
+                                        "
+                                    >
+                                        ${state}${
+                                            state &&
+                                            pincode
+                                                ? " - "
+                                                : ""
+                                        }${pincode}
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                        ${
+                            country
+                                ? `
+                                    <div
+                                        style="
+                                            font-size: 14px;
+                                            color: #5B4B75;
+                                        "
+                                    >
+                                        ${country}
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                    </div>
+                `;
+
+                // =================================================
+                // SEND ORDER CONFIRMATION EMAIL
+                // =================================================
+
+                if (user.email) {
                     try {
-                        const emailResult =
-                            await brevo.transactionalEmails.sendTransacEmail(
-                                {
-                                    sender: {
-                                        name:
-                                            "Sunshine Fancy Costumes",
+                        await brevo.transactionalEmails.sendTransacEmail(
+                            {
+                                sender: {
+                                    name: "Sunshine Fancy Costumes",
+                                    email: "shrekarreddy6@gmail.com",
+                                },
 
+                                to: [
+                                    {
                                         email:
-                                            "shrekarreddy6@gmail.com",
+                                            user.email,
+
+                                        name:
+                                            user.name ||
+                                            "Customer",
                                     },
+                                ],
 
-                                    to: [
-                                        {
-                                            email:
-                                                user.email,
+                                subject:
+                                    "Your Sunshine Fancy Costumes order is confirmed 🎉",
 
-                                            name:
-                                                user.name ||
-                                                "Customer",
-                                        },
-                                    ],
+                                htmlContent: `
+                                    <!DOCTYPE html>
 
-                                    subject:
-                                        "Your Sunshine Fancy Costumes order is confirmed 🎉",
+                                    <html>
 
-                                    htmlContent: `
-                                        <!DOCTYPE html>
+                                    <head>
+                                        <meta charset="UTF-8" />
 
-                                        <html>
+                                        <meta
+                                            name="viewport"
+                                            content="width=device-width, initial-scale=1.0"
+                                        />
+                                    </head>
 
-                                        <head>
+                                    <body
+                                        style="
+                                            margin: 0;
+                                            padding: 0;
+                                            background: #f7f5fb;
+                                            font-family: Arial, Helvetica, sans-serif;
+                                            color: #2E1A47;
+                                        "
+                                    >
 
-                                            <meta
-                                                charset="UTF-8"
-                                            />
-
-                                            <meta
-                                                name="viewport"
-                                                content="width=device-width, initial-scale=1.0"
-                                            />
-
-                                            <title>
-                                                Order Confirmed
-                                            </title>
-
-                                        </head>
-
-                                        <body
+                                        <div
                                             style="
-                                                margin: 0;
-                                                padding: 0;
-                                                background: #f7f5fb;
-                                                font-family: Arial, Helvetica, sans-serif;
-                                                color: #2E1A47;
+                                                max-width: 620px;
+                                                margin: 30px auto;
+                                                padding: 0 12px;
                                             "
                                         >
 
                                             <div
                                                 style="
-                                                    max-width: 620px;
-                                                    margin: 30px auto;
-                                                    padding: 0 12px;
+                                                    background: #ffffff;
+                                                    border-radius: 22px;
+                                                    overflow: hidden;
+                                                    border: 1px solid #EDEBFB;
                                                 "
                                             >
 
                                                 <div
                                                     style="
-                                                        background: #ffffff;
-                                                        border-radius: 22px;
-                                                        overflow: hidden;
-                                                        border: 1px solid #EDEBFB;
+                                                        padding: 38px 25px;
+                                                        text-align: center;
+                                                        background: linear-gradient(
+                                                            135deg,
+                                                            #8B5CF6,
+                                                            #6D3FD6
+                                                        );
                                                     "
                                                 >
 
-                                                    <!-- HEADER -->
-
                                                     <div
                                                         style="
-                                                            padding: 38px 25px;
-                                                            text-align: center;
-                                                            background: linear-gradient(135deg, #8B5CF6, #6D3FD6);
+                                                            font-size: 30px;
+                                                            font-weight: 800;
+                                                            color: #ffffff;
                                                         "
                                                     >
-
-                                                        <div
-                                                            style="
-                                                                font-size: 30px;
-                                                                font-weight: 800;
-                                                                color: #ffffff;
-                                                            "
-                                                        >
-                                                            Sunshine
-                                                        </div>
-
-                                                        <div
-                                                            style="
-                                                                margin-top: 7px;
-                                                                font-size: 14px;
-                                                                color: rgba(255,255,255,0.9);
-                                                            "
-                                                        >
-                                                            Fancy Costumes
-                                                        </div>
-
+                                                        Sunshine
                                                     </div>
 
-                                                    <!-- CONTENT -->
+                                                    <div
+                                                        style="
+                                                            margin-top: 7px;
+                                                            font-size: 14px;
+                                                            color: rgba(
+                                                                255,
+                                                                255,
+                                                                255,
+                                                                0.9
+                                                            );
+                                                        "
+                                                    >
+                                                        Fancy Costumes
+                                                    </div>
+
+                                                </div>
+
+                                                <div
+                                                    style="
+                                                        padding: 35px 30px;
+                                                    "
+                                                >
 
                                                     <div
                                                         style="
-                                                            padding: 35px 30px;
+                                                            text-align: center;
                                                         "
                                                     >
 
-                                                        <!-- SUCCESS -->
-
                                                         <div
                                                             style="
-                                                                text-align: center;
+                                                                width: 64px;
+                                                                height: 64px;
+                                                                margin: 0 auto 16px;
+                                                                border-radius: 50%;
+                                                                background: #F0EBFF;
+                                                                line-height: 64px;
+                                                                font-size: 31px;
+                                                                color: #8B5CF6;
                                                             "
                                                         >
-
-                                                            <div
-                                                                style="
-                                                                    width: 64px;
-                                                                    height: 64px;
-                                                                    margin: 0 auto 16px;
-                                                                    border-radius: 50%;
-                                                                    background: #F0EBFF;
-                                                                    line-height: 64px;
-                                                                    font-size: 31px;
-                                                                    color: #8B5CF6;
-                                                                "
-                                                            >
-                                                                ✓
-                                                            </div>
-
-                                                            <h1
-                                                                style="
-                                                                    margin: 0;
-                                                                    font-size: 26px;
-                                                                    color: #2E1A47;
-                                                                "
-                                                            >
-                                                                Order Confirmed!
-                                                            </h1>
-
-                                                            <p
-                                                                style="
-                                                                    margin: 10px 0 0;
-                                                                    font-size: 14px;
-                                                                    color: #786A8F;
-                                                                "
-                                                            >
-                                                                Thank you for shopping with Sunshine.
-                                                            </p>
-
+                                                            ✓
                                                         </div>
 
-                                                        <!-- GREETING -->
-
-                                                        <p
+                                                        <h1
                                                             style="
-                                                                margin: 30px 0 0;
-                                                                font-size: 16px;
-                                                                line-height: 1.7;
+                                                                margin: 0;
+                                                                font-size: 26px;
                                                                 color: #2E1A47;
                                                             "
                                                         >
-                                                            Hi
-                                                            <strong>
-                                                                ${user.name || "there"}
-                                                            </strong>,
-                                                        </p>
+                                                            Order Confirmed!
+                                                        </h1>
 
                                                         <p
                                                             style="
-                                                                margin: 8px 0 0;
+                                                                margin: 10px 0 0;
                                                                 font-size: 14px;
-                                                                line-height: 1.7;
-                                                                color: #665777;
+                                                                color: #786A8F;
                                                             "
                                                         >
-                                                            Your order has been successfully placed.
-                                                            Here are your order details.
+                                                            Thank you for shopping with Sunshine.
                                                         </p>
 
-                                                        <!-- ITEMS -->
+                                                    </div>
+
+                                                    <p
+                                                        style="
+                                                            margin: 30px 0 0;
+                                                            font-size: 16px;
+                                                            line-height: 1.7;
+                                                        "
+                                                    >
+                                                        Hi
+                                                        <strong>
+                                                            ${
+                                                                user.name ||
+                                                                "there"
+                                                            }
+                                                        </strong>,
+                                                    </p>
+
+                                                    <p
+                                                        style="
+                                                            margin: 8px 0 0;
+                                                            font-size: 14px;
+                                                            line-height: 1.7;
+                                                            color: #665777;
+                                                        "
+                                                    >
+                                                        Your order has been successfully placed.
+                                                        Here are your order details.
+                                                    </p>
+
+                                                    <div
+                                                        style="
+                                                            margin-top: 25px;
+                                                            padding: 22px;
+                                                            border: 1px solid #EDEBFB;
+                                                            border-radius: 18px;
+                                                        "
+                                                    >
 
                                                         <div
                                                             style="
-                                                                margin-top: 25px;
-                                                                padding: 22px;
-                                                                border: 1px solid #EDEBFB;
-                                                                border-radius: 18px;
+                                                                margin-bottom: 4px;
+                                                                font-size: 12px;
+                                                                font-weight: 800;
+                                                                text-transform: uppercase;
+                                                                letter-spacing: 1.5px;
+                                                                color: #8B5CF6;
                                                             "
                                                         >
-
-                                                            <div
-                                                                style="
-                                                                    margin-bottom: 4px;
-                                                                    font-size: 12px;
-                                                                    font-weight: 800;
-                                                                    text-transform: uppercase;
-                                                                    letter-spacing: 1.5px;
-                                                                    color: #8B5CF6;
-                                                                "
-                                                            >
-                                                                Your Items
-                                                            </div>
-
-                                                            ${itemsHtml}
-
+                                                            Your Items
                                                         </div>
 
-                                                        <!-- TOTAL -->
+                                                        ${itemsHtml}
 
-                                                        <div
+                                                    </div>
+
+                                                    <div
+                                                        style="
+                                                            margin-top: 20px;
+                                                            padding: 22px;
+                                                            background: #FAF9FF;
+                                                            border-radius: 18px;
+                                                            border: 1px solid #EDEBFB;
+                                                        "
+                                                    >
+
+                                                        <table
+                                                            width="100%"
+                                                            cellpadding="0"
+                                                            cellspacing="0"
                                                             style="
-                                                                margin-top: 20px;
-                                                                padding: 22px;
-                                                                background: #FAF9FF;
-                                                                border-radius: 18px;
-                                                                border: 1px solid #EDEBFB;
+                                                                border-collapse: collapse;
                                                             "
                                                         >
 
-                                                            <table
-                                                                width="100%"
-                                                                cellpadding="0"
-                                                                cellspacing="0"
-                                                                style="
-                                                                    border-collapse: collapse;
-                                                                "
-                                                            >
+                                                            <tr>
 
-                                                                <tr>
+                                                                <td
+                                                                    style="
+                                                                        font-size: 14px;
+                                                                        color: #665777;
+                                                                    "
+                                                                >
+                                                                    Total
+                                                                </td>
 
-                                                                    <td
-                                                                        style="
-                                                                            padding-bottom: 11px;
-                                                                            font-size: 14px;
-                                                                            color: #665777;
-                                                                        "
-                                                                    >
-                                                                        Subtotal
-                                                                    </td>
+                                                                <td
+                                                                    align="right"
+                                                                    style="
+                                                                        font-size: 18px;
+                                                                        font-weight: 800;
+                                                                        color: #2E1A47;
+                                                                    "
+                                                                >
+                                                                    ₹${amount}
+                                                                </td>
 
-                                                                    <td
-                                                                        align="right"
-                                                                        style="
-                                                                            padding-bottom: 11px;
-                                                                            font-size: 14px;
-                                                                            color: #665777;
-                                                                        "
-                                                                    >
-                                                                        ₹${subtotal}
-                                                                    </td>
+                                                            </tr>
 
-                                                                </tr>
+                                                        </table>
 
-                                                                <tr>
+                                                    </div>
 
-                                                                    <td
-                                                                        style="
-                                                                            padding-bottom: 14px;
-                                                                            border-bottom: 1px solid #EDEBFB;
-                                                                            font-size: 14px;
-                                                                            color: #665777;
-                                                                        "
-                                                                    >
-                                                                        Tax
-                                                                    </td>
+                                                    ${addressHtml}
 
-                                                                    <td
-                                                                        align="right"
-                                                                        style="
-                                                                            padding-bottom: 14px;
-                                                                            border-bottom: 1px solid #EDEBFB;
-                                                                            font-size: 14px;
-                                                                            color: #665777;
-                                                                        "
-                                                                    >
-                                                                        ₹${tax}
-                                                                    </td>
+                                                    <div
+                                                        style="
+                                                            margin-top: 28px;
+                                                            padding: 20px;
+                                                            background: #F6F1FF;
+                                                            border-radius: 16px;
+                                                            text-align: center;
+                                                        "
+                                                    >
 
-                                                                </tr>
-
-                                                                <tr>
-
-                                                                    <td
-                                                                        style="
-                                                                            padding-top: 15px;
-                                                                            font-size: 18px;
-                                                                            font-weight: 800;
-                                                                            color: #2E1A47;
-                                                                        "
-                                                                    >
-                                                                        Total
-                                                                    </td>
-
-                                                                    <td
-                                                                        align="right"
-                                                                        style="
-                                                                            padding-top: 15px;
-                                                                            font-size: 18px;
-                                                                            font-weight: 800;
-                                                                            color: #2E1A47;
-                                                                        "
-                                                                    >
-                                                                        ₹${amount}
-                                                                    </td>
-
-                                                                </tr>
-
-                                                            </table>
-
-                                                        </div>
-
-                                                        <!-- ADDRESS -->
-
-                                                        ${addressHtml}
-
-                                                        <!-- MESSAGE -->
-
-                                                        <div
+                                                        <p
                                                             style="
-                                                                margin-top: 28px;
-                                                                padding: 20px;
-                                                                background: #F6F1FF;
-                                                                border-radius: 16px;
-                                                                text-align: center;
+                                                                margin: 0;
+                                                                font-size: 14px;
+                                                                line-height: 1.7;
+                                                                color: #5B4B75;
                                                             "
                                                         >
-
-                                                            <p
-                                                                style="
-                                                                    margin: 0;
-                                                                    font-size: 14px;
-                                                                    line-height: 1.7;
-                                                                    color: #5B4B75;
-                                                                "
-                                                            >
-                                                                We'll start preparing your costume soon.
-                                                                Thank you for choosing Sunshine Fancy Costumes! ❤️
-                                                            </p>
-
-                                                        </div>
-
-                                                        <!-- FOOTER -->
-
-                                                        <div
-                                                            style="
-                                                                margin-top: 30px;
-                                                                padding-top: 22px;
-                                                                border-top: 1px solid #eee8f5;
-                                                                text-align: center;
-                                                            "
-                                                        >
-
-                                                            <p
-                                                                style="
-                                                                    margin: 0;
-                                                                    font-size: 13px;
-                                                                    color: #786A8F;
-                                                                "
-                                                            >
-                                                                Thank you for shopping with us
-                                                            </p>
-
-                                                            <p
-                                                                style="
-                                                                    margin: 7px 0 0;
-                                                                    font-size: 14px;
-                                                                    font-weight: 700;
-                                                                    color: #8B5CF6;
-                                                                "
-                                                            >
-                                                                Sunshine Fancy Costumes
-                                                            </p>
-
-                                                        </div>
+                                                            We'll start preparing your costume soon.
+                                                            Thank you for choosing Sunshine Fancy Costumes! ❤️
+                                                        </p>
 
                                                     </div>
 
@@ -1020,50 +1643,236 @@ export const createUserOrder =
 
                                             </div>
 
-                                        </body>
+                                        </div>
 
-                                        </html>
-                                    `,
-                                }
-                            );
+                                    </body>
+
+                                    </html>
+                                `,
+                            }
+                        );
 
                         console.log(
-                            "ORDER EMAIL SENT:",
-                            emailResult
+                            "ORDER CONFIRMATION EMAIL SENT"
                         );
 
                     } catch (emailError) {
                         console.error(
-                            "ORDER EMAIL ERROR:",
+                            "ORDER CONFIRMATION EMAIL ERROR:",
                             emailError
                         );
+
+                        // IMPORTANT:
+                        // Email failure must NOT cancel the order.
                     }
                 }
 
                 // =================================================
-                // SAVE ORDERS
+                // COMPLETE
                 // =================================================
 
-                if (orders.length > 0) {
-                    await Order.insertMany(
-                        orders
-                    );
-                }
+                console.log(
+                    "================================="
+                );
+
+                console.log(
+                    "CREATE USER ORDER COMPLETED"
+                );
+
+                console.log(
+                    "ORDER ID:",
+                    createdOrder._id.toString()
+                );
+
+                console.log(
+                    "================================="
+                );
 
                 return {
                     success: true,
 
-                    processed:
-                        orders.length,
+                    orderId:
+                        createdOrder._id.toString(),
+
+                    processed: true,
                 };
 
             } catch (error) {
                 console.error(
-                    "CREATE USER ORDER ERROR:",
-                    error
+                    "================================="
+                );
+
+                console.error(
+                    "CREATE USER ORDER ERROR:"
+                );
+
+                console.error(error);
+
+                console.error(
+                    "================================="
                 );
 
                 throw error;
             }
         }
     );
+
+// =====================================================
+// ORDER STATUS UPDATED
+// =====================================================
+
+export const orderStatusUpdated =
+    inngest.createFunction(
+        {
+            id: "order-status-updated",
+        },
+
+        {
+            event: "order/status-updated",
+        },
+
+        async ({ event }) => {
+            try {
+                await connectDB();
+
+                const {
+                    orderId,
+                    status,
+                } = event.data;
+
+                console.log(
+                    "================================="
+                );
+
+                console.log(
+                    "ORDER STATUS EVENT:"
+                );
+
+                console.log(
+                    "ORDER ID:",
+                    orderId
+                );
+
+                console.log(
+                    "STATUS:",
+                    status
+                );
+
+                console.log(
+                    "================================="
+                );
+
+                // =================================================
+                // ONLY EMAIL THESE STATUSES
+                // =================================================
+
+                if (
+                    status !== "Dispatched" &&
+                    status !== "Delivered"
+                ) {
+                    console.log(
+                        "STATUS EMAIL SKIPPED:",
+                        status
+                    );
+
+                    return {
+                        success: true,
+                        skipped: true,
+                    };
+                }
+
+                // =================================================
+                // FIND ORDER
+                // =================================================
+
+                const order =
+                    await Order.findById(
+                        orderId
+                    );
+
+                if (!order) {
+                    throw new Error(
+                        `Order not found: ${orderId}`
+                    );
+                }
+
+                // =================================================
+                // FIND USER
+                // =================================================
+
+                const user =
+                    await User.findById(
+                        order.userId
+                    );
+
+                if (!user) {
+                    throw new Error(
+                        `User not found: ${order.userId}`
+                    );
+                }
+
+                // =================================================
+                // SEND STATUS EMAIL
+                // =================================================
+
+                const result =
+                    await sendOrderStatusEmail({
+                        user,
+                        order,
+                        status,
+                    });
+
+                console.log(
+                    "ORDER STATUS EMAIL RESULT:",
+                    result
+                );
+
+                return {
+                    success: true,
+
+                    status,
+
+                    orderId,
+
+                    email:
+                        result.success,
+                };
+
+            } catch (error) {
+                console.error(
+                    "================================="
+                );
+
+                console.error(
+                    "ORDER STATUS EMAIL FUNCTION ERROR:"
+                );
+
+                console.error(error);
+
+                console.error(
+                    "================================="
+                );
+
+                throw error;
+            }
+        }
+    );
+    export const testInngest = inngest.createFunction(
+    {
+        id: "test-inngest",
+    },
+    {
+        event: "test/hello",
+    },
+    async ({ event }) => {
+        console.log("=================================");
+        console.log("🔥 TEST INNGEST FUNCTION RAN");
+        console.log("EVENT:", event);
+        console.log("=================================");
+
+        return {
+            success: true,
+            message: "Inngest is working",
+        };
+    }
+);

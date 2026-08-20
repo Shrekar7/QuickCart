@@ -8,20 +8,10 @@ import { NextResponse } from "next/server";
 export async function POST(request) {
     try {
         // =====================================================
-        // GET AUTHENTICATED USER
+        // AUTHENTICATION
         // =====================================================
 
         const { userId } = getAuth(request);
-
-        // =====================================================
-        // GET REQUEST DATA
-        // =====================================================
-
-        const { address, items } = await request.json();
-
-        // =====================================================
-        // CHECK AUTHENTICATION
-        // =====================================================
 
         if (!userId) {
             return NextResponse.json(
@@ -29,15 +19,15 @@ export async function POST(request) {
                     success: false,
                     message: "User not authenticated",
                 },
-                {
-                    status: 401,
-                }
+                { status: 401 }
             );
         }
 
         // =====================================================
-        // VALIDATE DATA
+        // REQUEST DATA
         // =====================================================
+
+        const { address, items } = await request.json();
 
         if (
             !address ||
@@ -50,9 +40,7 @@ export async function POST(request) {
                     success: false,
                     message: "Invalid order data",
                 },
-                {
-                    status: 400,
-                }
+                { status: 400 }
             );
         }
 
@@ -63,39 +51,282 @@ export async function POST(request) {
         await connectDB();
 
         // =====================================================
-        // CALCULATE SUBTOTAL
+        // NORMALIZE ITEMS
         // =====================================================
 
-        const amounts = await Promise.all(
-            items.map(async (item) => {
-                const product = await Product.findById(
-                    item.product
-                );
+        const normalizedItems = items.map((item) => {
+            let productId = item.product;
+            let size = item.size || "";
 
-                if (!product) {
-                    throw new Error(
-                        `Product not found: ${item.product}`
+            // -------------------------------------------------
+            // SUPPORT OLD productId::size FORMAT
+            // -------------------------------------------------
+
+            if (
+                typeof productId === "string" &&
+                productId.includes("::")
+            ) {
+                const parts = productId.split("::");
+
+                productId = parts[0];
+
+                if (!size) {
+                    size = parts[1] || "";
+                }
+            }
+
+            return {
+                product: productId,
+
+                quantity:
+                    Number(item.quantity) > 0
+                        ? Number(item.quantity)
+                        : 1,
+
+                size: size?.trim() || "",
+            };
+        });
+
+        // =====================================================
+        // DEBUG - NORMALIZED ORDER ITEMS
+        // =====================================================
+
+        console.log("=================================");
+        console.log("NORMALIZED ORDER ITEMS");
+        console.log(
+            JSON.stringify(
+                normalizedItems,
+                null,
+                2
+            )
+        );
+        console.log("=================================");
+
+        // =====================================================
+        // GET PRODUCTS
+        // =====================================================
+
+        const productIds = normalizedItems.map(
+            (item) => item.product
+        );
+
+        const products = await Product.find({
+            _id: { $in: productIds },
+        }).lean();
+
+        console.log("=================================");
+        console.log(
+            "PRODUCTS FOUND:",
+            products.length
+        );
+        console.log("=================================");
+
+        // =====================================================
+        // CALCULATE SUBTOTAL
+        // VALIDATE PRODUCTS
+        // VALIDATE SIZES
+        // VALIDATE STOCK
+        // =====================================================
+
+        let subtotal = 0;
+
+        for (const item of normalizedItems) {
+            const product = products.find(
+                (p) =>
+                    p._id.toString() ===
+                    item.product.toString()
+            );
+
+            // -------------------------------------------------
+            // PRODUCT NOT FOUND
+            // -------------------------------------------------
+
+            if (!product) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: `Product not found: ${item.product}`,
+                    },
+                    { status: 400 }
+                );
+            }
+
+            const quantity = item.quantity;
+
+            // =================================================
+            // DEBUG PRODUCT
+            // =================================================
+
+            console.log("=================================");
+            console.log(
+                "ORDER PRODUCT:",
+                product.name
+            );
+            console.log(
+                "PRODUCT ID:",
+                product._id.toString()
+            );
+            console.log(
+                "SIZE:",
+                item.size || "NO SIZE"
+            );
+            console.log(
+                "QUANTITY:",
+                quantity
+            );
+            console.log(
+                "CURRENT INVENTORY:",
+                product.inventory
+            );
+            console.log("=================================");
+
+            // =================================================
+            // SIZE PRICE
+            // =================================================
+
+            let price =
+                Number(product.offerPrice) || 0;
+
+            if (
+                item.size &&
+                product.sizePrices
+            ) {
+                const sizePrices =
+                    product.sizePrices;
+
+                let sizePrice;
+
+                if (
+                    sizePrices instanceof Map
+                ) {
+                    sizePrice =
+                        sizePrices.get(
+                            item.size
+                        );
+                } else {
+                    sizePrice =
+                        sizePrices[item.size];
+                }
+
+                if (
+                    sizePrice !== undefined &&
+                    sizePrice !== null
+                ) {
+                    price =
+                        Number(sizePrice);
+                }
+            }
+
+            // =================================================
+            // INVENTORY VALIDATION
+            // =================================================
+
+            if (item.size) {
+                if (!product.inventory) {
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            message:
+                                `${product.name} does not have inventory configured.`,
+                        },
+                        { status: 400 }
                     );
                 }
 
-                const quantity =
-                    Number(item.quantity) || 1;
+                let currentStock;
 
-                const price =
-                    Number(product.offerPrice) || 0;
+                if (
+                    product.inventory instanceof Map
+                ) {
+                    currentStock =
+                        product.inventory.get(
+                            item.size
+                        );
+                } else {
+                    currentStock =
+                        product.inventory[
+                            item.size
+                        ];
+                }
 
-                return price * quantity;
-            })
-        );
+                // -------------------------------------------------
+                // SIZE DOES NOT EXIST
+                // -------------------------------------------------
 
-        const subtotal = amounts.reduce(
-            (total, currentAmount) =>
-                total + currentAmount,
-            0
-        );
+                if (
+                    currentStock === undefined ||
+                    currentStock === null
+                ) {
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            message:
+                                `Size ${item.size} is not available for ${product.name}.`,
+                        },
+                        { status: 400 }
+                    );
+                }
+
+                // -------------------------------------------------
+                // NOT ENOUGH STOCK
+                // -------------------------------------------------
+
+                if (
+                    Number(currentStock) <
+                    quantity
+                ) {
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            message:
+                                `Only ${currentStock} available for ${product.name} - Size ${item.size}.`,
+                        },
+                        { status: 400 }
+                    );
+                }
+
+                // -------------------------------------------------
+                // DEBUG STOCK VALIDATION
+                // -------------------------------------------------
+
+                console.log("=================================");
+                console.log(
+                    "STOCK VALIDATION PASSED"
+                );
+                console.log(
+                    "PRODUCT:",
+                    product.name
+                );
+                console.log(
+                    "SIZE:",
+                    item.size
+                );
+                console.log(
+                    "CURRENT STOCK:",
+                    currentStock
+                );
+                console.log(
+                    "ORDER QUANTITY:",
+                    quantity
+                );
+                console.log(
+                    "EXPECTED NEW STOCK:",
+                    Number(currentStock) -
+                        quantity
+                );
+                console.log("=================================");
+            }
+
+            // =================================================
+            // ADD TO SUBTOTAL
+            // =================================================
+
+            subtotal +=
+                price * quantity;
+        }
 
         // =====================================================
-        // CALCULATE TAX
+        // TAX
         // =====================================================
 
         const tax = Math.floor(
@@ -103,38 +334,89 @@ export async function POST(request) {
         );
 
         // =====================================================
-        // FINAL TOTAL
+        // TOTAL
         // =====================================================
 
         const totalAmount =
             subtotal + tax;
 
         // =====================================================
-        // SEND ORDER EVENT TO INNGEST
+        // DEBUG BEFORE INNGEST
         // =====================================================
 
-        await inngest.send({
-            name: "order/created",
-
-            data: {
-                userId,
-
-                address,
-
-                items,
-
-                subtotal,
-
-                tax,
-
-                amount: totalAmount,
-
-                date: Date.now(),
-            },
-        });
+        console.log("=================================");
+        console.log(
+            "SENDING ORDER TO INNGEST"
+        );
+        console.log(
+            "USER ID:",
+            userId
+        );
+        console.log(
+            "ORDER ITEMS:"
+        );
+        console.log(
+            JSON.stringify(
+                normalizedItems,
+                null,
+                2
+            )
+        );
+        console.log(
+            "SUBTOTAL:",
+            subtotal
+        );
+        console.log(
+            "TAX:",
+            tax
+        );
+        console.log(
+            "TOTAL:",
+            totalAmount
+        );
+        console.log("=================================");
 
         // =====================================================
-        // CLEAR USER CART
+        // SEND ORDER TO INNGEST
+        // =====================================================
+
+        const inngestResponse =
+            await inngest.send({
+                name: "order/created",
+
+                data: {
+                    userId,
+
+                    address,
+
+                    items: normalizedItems,
+
+                    subtotal,
+
+                    tax,
+
+                    amount: totalAmount,
+
+                    date: Date.now(),
+                },
+            });
+
+        // =====================================================
+        // DEBUG INNGEST RESPONSE
+        // =====================================================
+
+        console.log("=================================");
+        console.log(
+            "INNGEST EVENT SENT SUCCESSFULLY"
+        );
+        console.log(
+            "INNGEST RESPONSE:",
+            inngestResponse
+        );
+        console.log("=================================");
+
+        // =====================================================
+        // CLEAR CART
         // =====================================================
 
         const user =
@@ -142,11 +424,17 @@ export async function POST(request) {
 
         if (user) {
             user.CartItems = {};
+
             await user.save();
+
+            console.log(
+                "CART CLEARED FOR USER:",
+                userId
+            );
         }
 
         // =====================================================
-        // RESPONSE
+        // SUCCESS
         // =====================================================
 
         return NextResponse.json({
@@ -161,10 +449,24 @@ export async function POST(request) {
 
             totalAmount,
         });
+
     } catch (error) {
+        // =====================================================
+        // ERROR
+        // =====================================================
+
         console.error(
-            "CREATE ORDER ERROR:",
-            error
+            "================================="
+        );
+
+        console.error(
+            "CREATE ORDER ERROR:"
+        );
+
+        console.error(error);
+
+        console.error(
+            "================================="
         );
 
         return NextResponse.json(
@@ -175,9 +477,7 @@ export async function POST(request) {
                     error.message ||
                     "Something went wrong",
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

@@ -1,111 +1,376 @@
-'use client'
-import React from 'react'
+"use client";
 
-const sizeMap = {
-    sm: { wrapper: "w-10 h-10", inset: "inset-1", dot: "w-1.5 h-1.5", label: "text-[10px]", showLabel: false },
-    md: { wrapper: "w-16 h-16", inset: "inset-1.5", dot: "w-2 h-2", label: "text-[11px]", showLabel: true },
-    lg: { wrapper: "w-24 h-24", inset: "inset-2", dot: "w-3 h-3", label: "text-[13px]", showLabel: true },
-    xl: { wrapper: "w-32 h-32", inset: "inset-3", dot: "w-4 h-4", label: "text-[14px]", showLabel: true },
-}
+import React from "react";
 
-const Loading = ({ size = "lg", fullHeight = true, label = "Loading" }) => {
-    const s = sizeMap[size] || sizeMap.lg
-
+const Loading = () => {
     return (
-        <div className={`flex flex-col justify-center items-center gap-6 ${fullHeight ? "h-[70vh]" : "py-10"}`}>
-
-            {/* Layered spinner */}
-            <div className={`relative ${s.wrapper}`}>
-                {/* ambient glow pulse behind everything */}
+        <div
+            style={{
+                minHeight: "70vh",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#FAF9FF",
+            }}
+        >
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                }}
+            >
+                {/* Truck area */}
                 <div
-                    className="absolute inset-0 rounded-full blur-xl opacity-40"
                     style={{
-                        background: "radial-gradient(circle, #8B5CF6 0%, transparent 70%)",
-                        animation: "loadingPulse 2s ease-in-out infinite",
+                        position: "relative",
+                        width: "230px",
+                        height: "130px",
+                        overflow: "hidden",
                     }}
-                />
-
-                {/* outer ring — slow, gold */}
-                <div
-                    className="absolute inset-0 rounded-full border-4 border-[#F5B700]/15"
-                    style={{
-                        borderTopColor: "#F5B700",
-                        animation: "spin 1.8s linear infinite",
-                    }}
-                />
-
-                {/* middle ring — medium, purple, reverse direction */}
-                <div
-                    className={`absolute ${s.inset} rounded-full border-4 border-[#8B5CF6]/15`}
-                    style={{
-                        borderTopColor: "#8B5CF6",
-                        borderRightColor: "#8B5CF6",
-                        animation: "spinReverse 1.3s linear infinite",
-                    }}
-                />
-
-                {/* inner core — soft breathing dot */}
-                <div className="absolute inset-0 flex items-center justify-center">
+                >
+                    {/* Road */}
                     <div
-                        className={`${s.dot} rounded-full`}
                         style={{
-                            background: "linear-gradient(135deg, #8B5CF6 0%, #F5B700 100%)",
-                            animation: "corePulse 1.4s ease-in-out infinite",
+                            position: "absolute",
+                            left: 0,
+                            bottom: "18px",
+                            width: "100%",
+                            height: "2px",
+                            background: "rgba(46,26,71,0.15)",
+                        }}
+                    >
+                        <div
+                            style={{
+                                position: "absolute",
+                                width: "40px",
+                                height: "2px",
+                                background: "#8B5CF6",
+                                animation: "loadingRoad 0.7s linear infinite",
+                            }}
+                        />
+                    </div>
+
+                    {/* Truck */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            left: "45px",
+                            bottom: "20px",
+                            width: "145px",
+                            height: "70px",
+                            animation: "loadingTruck 0.8s ease-in-out infinite",
+                        }}
+                    >
+                        {/* Main truck body */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                left: 0,
+                                top: 0,
+                                width: "95px",
+                                height: "60px",
+                                border: "3px solid #2E1A47",
+                                borderRadius: "8px",
+                                background: "#8B5CF6",
+                                boxSizing: "border-box",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            {/* Sunshine logo */}
+                            <div
+                                style={{
+                                    width: "36px",
+                                    height: "36px",
+                                    borderRadius: "50%",
+                                    background: "#F5B700",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: "#2E1A47",
+                                    fontWeight: "700",
+                                    fontSize: "16px",
+                                }}
+                            >
+                                S
+                            </div>
+                        </div>
+
+                        {/* Cabin */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                right: 0,
+                                top: "18px",
+                                width: "52px",
+                                height: "42px",
+                                border: "3px solid #2E1A47",
+                                borderLeft: 0,
+                                borderRadius: "0 8px 8px 0",
+                                background: "#F5B700",
+                                boxSizing: "border-box",
+                            }}
+                        >
+                            {/* Window */}
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    left: "7px",
+                                    top: "6px",
+                                    width: "32px",
+                                    height: "18px",
+                                    border: "2px solid #2E1A47",
+                                    borderRadius: "4px",
+                                    background: "#F6F1FF",
+                                    boxSizing: "border-box",
+                                }}
+                            />
+                        </div>
+
+                        {/* Front bumper */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                right: "-6px",
+                                bottom: "2px",
+                                width: "8px",
+                                height: "8px",
+                                background: "#2E1A47",
+                                borderRadius: "0 4px 4px 0",
+                            }}
+                        />
+
+                        {/* Left wheel */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                left: "14px",
+                                bottom: "-9px",
+                                width: "27px",
+                                height: "27px",
+                                borderRadius: "50%",
+                                background: "#2E1A47",
+                                border: "3px solid #2E1A47",
+                                boxSizing: "border-box",
+                                animation: "loadingWheel 0.8s linear infinite",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    left: "6px",
+                                    top: "6px",
+                                    width: "9px",
+                                    height: "9px",
+                                    borderRadius: "50%",
+                                    background: "#F6F1FF",
+                                }}
+                            />
+                        </div>
+
+                        {/* Right wheel */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                right: "14px",
+                                bottom: "-9px",
+                                width: "27px",
+                                height: "27px",
+                                borderRadius: "50%",
+                                background: "#2E1A47",
+                                border: "3px solid #2E1A47",
+                                boxSizing: "border-box",
+                                animation: "loadingWheel 0.8s linear infinite",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    left: "6px",
+                                    top: "6px",
+                                    width: "9px",
+                                    height: "9px",
+                                    borderRadius: "50%",
+                                    background: "#F6F1FF",
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Sparkles */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            left: "20px",
+                            top: "45px",
+                            width: "6px",
+                            height: "6px",
+                            borderRadius: "50%",
+                            background: "#F5B700",
+                            animation: "loadingSparkle 1.3s ease-in-out infinite",
+                        }}
+                    />
+
+                    <div
+                        style={{
+                            position: "absolute",
+                            left: "8px",
+                            top: "72px",
+                            width: "4px",
+                            height: "4px",
+                            borderRadius: "50%",
+                            background: "#8B5CF6",
+                            animation: "loadingSparkle 1.3s ease-in-out infinite",
+                            animationDelay: "0.3s",
+                        }}
+                    />
+
+                    <div
+                        style={{
+                            position: "absolute",
+                            right: "18px",
+                            top: "32px",
+                            width: "6px",
+                            height: "6px",
+                            borderRadius: "50%",
+                            background: "#F5B700",
+                            animation: "loadingSparkle 1.3s ease-in-out infinite",
+                            animationDelay: "0.6s",
                         }}
                     />
                 </div>
-            </div>
 
-            {/* Animated label */}
-            {s.showLabel && (
-                <div className="flex items-center gap-1.5">
-                    <span className={`${s.label} font-semibold tracking-[0.15em] uppercase text-[#2E1A47]/50`}>
-                        {label}
+                {/* Text */}
+                <div
+                    style={{
+                        marginTop: "10px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "7px",
+                    }}
+                >
+                    <span
+                        style={{
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            letterSpacing: "0.2em",
+                            textTransform: "uppercase",
+                            color: "rgba(46,26,71,0.55)",
+                        }}
+                    >
+                        Preparing your order
                     </span>
-                    <span className="flex gap-1">
+
+                    <span style={{ display: "flex", gap: "4px" }}>
                         <span
-                            className="w-1 h-1 rounded-full bg-[#8B5CF6]"
-                            style={{ animation: "dotBounce 1.2s ease-in-out infinite", animationDelay: "0s" }}
+                            style={{
+                                width: "4px",
+                                height: "4px",
+                                borderRadius: "50%",
+                                background: "#8B5CF6",
+                                animation: "loadingDot 1.2s ease-in-out infinite",
+                            }}
                         />
+
                         <span
-                            className="w-1 h-1 rounded-full bg-[#8B5CF6]"
-                            style={{ animation: "dotBounce 1.2s ease-in-out infinite", animationDelay: "0.15s" }}
+                            style={{
+                                width: "4px",
+                                height: "4px",
+                                borderRadius: "50%",
+                                background: "#8B5CF6",
+                                animation: "loadingDot 1.2s ease-in-out infinite",
+                                animationDelay: "0.15s",
+                            }}
                         />
+
                         <span
-                            className="w-1 h-1 rounded-full bg-[#8B5CF6]"
-                            style={{ animation: "dotBounce 1.2s ease-in-out infinite", animationDelay: "0.3s" }}
+                            style={{
+                                width: "4px",
+                                height: "4px",
+                                borderRadius: "50%",
+                                background: "#8B5CF6",
+                                animation: "loadingDot 1.2s ease-in-out infinite",
+                                animationDelay: "0.3s",
+                            }}
                         />
                     </span>
                 </div>
-            )}
 
-            <style jsx>{`
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-                @keyframes spinReverse {
-                    from { transform: rotate(360deg); }
-                    to { transform: rotate(0deg); }
-                }
-                @keyframes loadingPulse {
-                    0%, 100% { opacity: 0.25; transform: scale(0.9); }
-                    50% { opacity: 0.5; transform: scale(1.1); }
-                }
-                @keyframes corePulse {
-                    0%, 100% { transform: scale(1); opacity: 1; }
-                    50% { transform: scale(1.6); opacity: 0.6; }
-                }
-                @keyframes dotBounce {
-                    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-                    40% { transform: translateY(-4px); opacity: 1; }
-                }
-                @media (prefers-reduced-motion: reduce) {
-                    * { animation: none !important; }
-                }
-            `}</style>
+                <p
+                    style={{
+                        marginTop: "8px",
+                        fontSize: "10px",
+                        letterSpacing: "0.12em",
+                        color: "rgba(91,75,117,0.4)",
+                    }}
+                >
+                    SUNSHINE FANCY COSTUMES
+                </p>
+            </div>
+
+            {/* Animations */}
+            <style>
+                {`
+                    @keyframes loadingTruck {
+                        0%, 100% {
+                            transform: translateY(0);
+                        }
+
+                        50% {
+                            transform: translateY(-3px);
+                        }
+                    }
+
+                    @keyframes loadingWheel {
+                        from {
+                            transform: rotate(0deg);
+                        }
+
+                        to {
+                            transform: rotate(360deg);
+                        }
+                    }
+
+                    @keyframes loadingRoad {
+                        from {
+                            transform: translateX(-45px);
+                        }
+
+                        to {
+                            transform: translateX(230px);
+                        }
+                    }
+
+                    @keyframes loadingSparkle {
+                        0%, 100% {
+                            opacity: 0.2;
+                            transform: scale(0.7);
+                        }
+
+                        50% {
+                            opacity: 1;
+                            transform: scale(1.3);
+                        }
+                    }
+
+                    @keyframes loadingDot {
+                        0%, 80%, 100% {
+                            opacity: 0.3;
+                            transform: translateY(0);
+                        }
+
+                        40% {
+                            opacity: 1;
+                            transform: translateY(-3px);
+                        }
+                    }
+                `}
+            </style>
         </div>
-    )
-}
+    );
+};
 
-export default Loading 
+export default Loading;

@@ -8,6 +8,32 @@ import Loading from "@/components/Loading";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+const statusStyles = {
+    "Order placed": {
+        bg: "bg-[#F5B700]/10",
+        text: "text-[#B18400]",
+        dot: "bg-[#F5B700]",
+    },
+
+    Dispatched: {
+        bg: "bg-[#2E7D6B]/10",
+        text: "text-[#2E7D6B]",
+        dot: "bg-[#2E7D6B]",
+    },
+
+    Delivered: {
+        bg: "bg-[#2E7D6B]/10",
+        text: "text-[#2E7D6B]",
+        dot: "bg-[#2E7D6B]",
+    },
+
+    Cancelled: {
+        bg: "bg-[#E8578E]/10",
+        text: "text-[#E8578E]",
+        dot: "bg-[#E8578E]",
+    },
+};
+
 const Orders = () => {
     const {
         currency,
@@ -18,7 +44,10 @@ const Orders = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Fetch seller orders
+    /* ============================================================
+       FETCH SELLER ORDERS
+    ============================================================ */
+
     const fetchSellerOrders = async () => {
         try {
             const token = await getToken();
@@ -33,12 +62,20 @@ const Orders = () => {
             );
 
             if (data.success) {
-                setOrders(data.orders);
+                // Latest orders first
+                const sortedOrders = [...data.orders].sort(
+                    (a, b) => Number(b.date) - Number(a.date)
+                );
+
+                setOrders(sortedOrders);
             } else {
                 toast.error(data.message);
             }
         } catch (error) {
-            console.error("SELLER ORDERS ERROR:", error);
+            console.error(
+                "SELLER ORDERS ERROR:",
+                error
+            );
 
             toast.error(
                 error.response?.data?.message ||
@@ -50,8 +87,14 @@ const Orders = () => {
         }
     };
 
-    // Update order status
-    const updateOrderStatus = async (orderId, status) => {
+    /* ============================================================
+       UPDATE ORDER STATUS
+    ============================================================ */
+
+    const updateOrderStatus = async (
+        orderId,
+        status
+    ) => {
         try {
             const token = await getToken();
 
@@ -71,13 +114,15 @@ const Orders = () => {
             if (data.success) {
                 toast.success(data.message);
 
-                // Refresh orders after updating status
                 await fetchSellerOrders();
             } else {
                 toast.error(data.message);
             }
         } catch (error) {
-            console.error("UPDATE ORDER STATUS ERROR:", error);
+            console.error(
+                "UPDATE ORDER STATUS ERROR:",
+                error
+            );
 
             toast.error(
                 error.response?.data?.message ||
@@ -87,7 +132,10 @@ const Orders = () => {
         }
     };
 
-    // Fetch orders when seller logs in
+    /* ============================================================
+       FETCH WHEN SELLER LOGS IN
+    ============================================================ */
+
     useEffect(() => {
         if (user) {
             fetchSellerOrders();
@@ -96,171 +144,565 @@ const Orders = () => {
         }
     }, [user]);
 
-    return (
-        <div className="flex-1 h-screen overflow-scroll flex flex-col justify-between text-sm">
+    /* ============================================================
+       LOADING
+    ============================================================ */
 
-            {loading ? (
+    if (loading) {
+        return (
+            <div className="flex-1 min-h-screen flex items-center justify-center">
                 <Loading />
-            ) : (
-                <div className="md:p-10 p-4 space-y-5">
+            </div>
+        );
+    }
 
-                    <h2 className="text-lg font-medium">
+    /* ============================================================
+       PAGE
+    ============================================================ */
+
+    return (
+        <div className="flex-1 min-h-screen overflow-y-auto bg-[#FAF9FF]/40 text-sm">
+
+            <div className="p-4 sm:p-6 md:p-8 lg:p-10">
+
+                {/* ==================================================
+                    HEADER
+                ================================================== */}
+
+                <div className="mb-7">
+
+                    <div className="flex items-center gap-2 mb-2">
+
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#F5B700]" />
+
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8B5CF6]">
+                            Store Management
+                        </span>
+
+                    </div>
+
+                    <h1 className="text-2xl sm:text-3xl font-serif tracking-tight text-[#2E1A47]">
                         Orders
-                    </h2>
+                    </h1>
 
-                    {orders.length === 0 ? (
-                        <div className="text-gray-500 py-10">
-                            No orders found.
+                    <p className="mt-1.5 text-xs sm:text-sm text-[#5B4B75]/55">
+                        Manage customer orders and update their delivery status.
+                    </p>
+
+                </div>
+
+                {/* ==================================================
+                    EMPTY STATE
+                ================================================== */}
+
+                {orders.length === 0 ? (
+
+                    <div className="rounded-2xl border border-[#EDEBFB] bg-white px-6 py-16 text-center">
+
+                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#8B5CF6]/10">
+
+                            <Image
+                                src={assets.box_icon}
+                                alt="Orders"
+                                width={27}
+                                height={27}
+                            />
+
                         </div>
-                    ) : (
-                        <div className="max-w-4xl rounded-md">
 
-                            {orders.map((order, index) => (
+                        <h2 className="text-base font-medium text-[#2E1A47]">
+                            No orders yet
+                        </h2>
+
+                        <p className="mt-1 text-sm text-[#5B4B75]/50">
+                            Customer orders will appear here once they place an order.
+                        </p>
+
+                    </div>
+
+                ) : (
+
+                    /* ==================================================
+                       ORDERS LIST
+                    ================================================== */
+
+                    <div className="space-y-4">
+
+                        {orders.map((order, index) => {
+
+                            const statusStyle =
+                                statusStyles[order.status] ||
+                                statusStyles["Order placed"];
+
+                            return (
+
                                 <div
-                                    key={order._id || index}
-                                    className="flex flex-col md:flex-row gap-5 justify-between p-5 border-t border-gray-300"
+                                    key={
+                                        order._id ||
+                                        index
+                                    }
+                                    className="
+                                        overflow-hidden
+                                        rounded-2xl
+                                        border
+                                        border-[#EDEBFB]
+                                        bg-white
+                                        shadow-[0_4px_20px_rgba(46,26,71,0.025)]
+                                        transition-all
+                                        duration-300
+                                        hover:border-[#DCD6F4]
+                                        hover:shadow-[0_8px_30px_rgba(46,26,71,0.06)]
+                                    "
                                 >
 
-                                    {/* PRODUCTS */}
-                                    <div className="flex-1 flex gap-5 max-w-80">
+                                    {/* ==================================================
+                                        ORDER HEADER
+                                    ================================================== */}
 
-                                        <Image
-                                            className="max-w-16 max-h-16 object-cover"
-                                            src={assets.box_icon}
-                                            alt="box_icon"
-                                        />
+                                    <div
+                                        className="
+                                            flex
+                                            flex-wrap
+                                            items-center
+                                            justify-between
+                                            gap-3
+                                            border-b
+                                            border-[#EDEBFB]
+                                            bg-[#FAF9FF]/70
+                                            px-4
+                                            py-3.5
+                                            sm:px-5
+                                        "
+                                    >
 
-                                        <div className="flex flex-col gap-3">
+                                        <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-[#5B4B75]/55">
 
-                                            <span className="font-medium">
-                                                {order.items
-                                                    ?.map(
-                                                        (item) =>
-                                                            `${item.product?.name || "Product"} x ${item.quantity}`
-                                                    )
-                                                    .join(", ")}
+                                            <span className="font-medium text-[#5B4B75]/70">
+                                                Order #
+                                                {(order._id || "")
+                                                    .toString()
+                                                    .slice(-8)
+                                                    .toUpperCase()}
                                             </span>
 
+                                            <span className="h-1 w-1 rounded-full bg-[#5B4B75]/25" />
+
                                             <span>
-                                                Items : {order.items?.length || 0}
+                                                {new Date(
+                                                    order.date
+                                                ).toLocaleDateString(
+                                                    "en-IN",
+                                                    {
+                                                        day: "numeric",
+                                                        month: "short",
+                                                        year: "numeric",
+                                                    }
+                                                )}
                                             </span>
 
                                         </div>
+
+                                        {/* STATUS */}
+
+                                        <span
+                                            className={`
+                                                inline-flex
+                                                items-center
+                                                gap-1.5
+                                                rounded-full
+                                                px-2.5
+                                                py-1
+                                                text-[10px]
+                                                font-medium
+                                                ${statusStyle.bg}
+                                                ${statusStyle.text}
+                                            `}
+                                        >
+
+                                            <span
+                                                className={`
+                                                    h-1.5
+                                                    w-1.5
+                                                    rounded-full
+                                                    ${statusStyle.dot}
+                                                `}
+                                            />
+
+                                            {order.status}
+
+                                        </span>
+
                                     </div>
 
-                                    {/* ADDRESS */}
-                                    <div>
-                                        {order.address && (
-                                            <p>
-                                                <span className="font-medium">
-                                                    {order.address.fullName}
-                                                </span>
+                                    {/* ==================================================
+                                        ORDER BODY
+                                    ================================================== */}
 
-                                                <br />
+                                    <div className="p-4 sm:p-5">
 
-                                                <span>
-                                                    {order.address.area}
-                                                </span>
+                                        <div className="grid gap-6 md:grid-cols-[1.5fr_1fr_auto_auto] md:items-center">
 
-                                                <br />
+                                            {/* ==================================================
+                                                PRODUCTS
+                                            ================================================== */}
 
-                                                <span>
-                                                    {order.address.city},{" "}
-                                                    {order.address.state}
-                                                </span>
+                                            <div className="min-w-0">
 
-                                                <br />
+                                                <div className="flex items-start gap-4">
 
-                                                <span>
-                                                    {order.address.phoneNumber}
-                                                </span>
-                                            </p>
-                                        )}
-                                    </div>
+                                                    {/* BOX ICON */}
 
-                                    {/* AMOUNT */}
-                                    <p className="font-medium my-auto">
-                                        {currency}
-                                        {order.amount}
-                                    </p>
+                                                    <div
+                                                        className="
+                                                            flex
+                                                            h-12
+                                                            w-12
+                                                            shrink-0
+                                                            items-center
+                                                            justify-center
+                                                            rounded-xl
+                                                            border
+                                                            border-[#EDEBFB]
+                                                            bg-[#FAF9FF]
+                                                        "
+                                                    >
 
-                                    {/* ORDER INFO */}
-                                    <div className="min-w-44">
-                                        <p className="flex flex-col gap-1">
+                                                        <Image
+                                                            src={
+                                                                assets.box_icon
+                                                            }
+                                                            alt="Order"
+                                                            width={24}
+                                                            height={24}
+                                                        />
 
-                                            <span>
-                                                Method : COD
-                                            </span>
+                                                    </div>
 
-                                            <span>
-                                                Date :{" "}
-                                                {new Date(
-                                                    order.date
-                                                ).toLocaleDateString()}
-                                            </span>
+                                                    {/* PRODUCTS */}
 
-                                            <span>
-                                                Payment : Pending
-                                            </span>
+                                                    <div className="min-w-0 flex-1">
 
-                                            {/* STATUS */}
-                                            <span>
-                                                Status :{" "}
-                                                <span
-                                                    className={
-                                                        order.status === "Delivered"
-                                                            ? "text-green-600 font-medium"
-                                                            : order.status === "Dispatched"
-                                                            ? "text-blue-600 font-medium"
-                                                            : "text-orange-600 font-medium"
-                                                    }
+                                                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#5B4B75]/40">
+                                                            Products
+                                                        </p>
+
+                                                        <div className="space-y-2">
+
+                                                            {order.items?.map(
+                                                                (
+                                                                    item,
+                                                                    itemIndex
+                                                                ) => (
+
+                                                                    <div
+                                                                        key={
+                                                                            item._id ||
+                                                                            itemIndex
+                                                                        }
+                                                                        className="
+                                                                            rounded-xl
+                                                                            border
+                                                                            border-[#F0EDF8]
+                                                                            bg-[#FCFBFF]
+                                                                            px-3
+                                                                            py-2.5
+                                                                        "
+                                                                    >
+
+                                                                        {/* PRODUCT NAME */}
+
+                                                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+
+                                                                            <span className="text-sm font-medium text-[#2E1A47]">
+                                                                                {item.product?.name ||
+                                                                                    "Product"}
+                                                                            </span>
+
+                                                                            <span className="text-xs text-[#5B4B75]/35">
+                                                                                ×
+                                                                            </span>
+
+                                                                            <span className="text-xs text-[#5B4B75]/65">
+                                                                                {item.quantity}
+                                                                            </span>
+
+                                                                        </div>
+
+                                                                        {/* SIZE */}
+
+                                                                        <div className="mt-1.5 flex items-center gap-2">
+
+                                                                            <span className="text-[10px] uppercase tracking-[0.12em] text-[#5B4B75]/40">
+                                                                                Size
+                                                                            </span>
+
+                                                                            <span
+                                                                                className="
+                                                                                    inline-flex
+                                                                                    min-w-[30px]
+                                                                                    items-center
+                                                                                    justify-center
+                                                                                    rounded-md
+                                                                                    border
+                                                                                    border-[#DDD6F3]
+                                                                                    bg-white
+                                                                                    px-2
+                                                                                    py-1
+                                                                                    text-[11px]
+                                                                                    font-semibold
+                                                                                    text-[#6D4DB3]
+                                                                                "
+                                                                            >
+                                                                                {item.size ||
+                                                                                    "N/A"}
+                                                                            </span>
+
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                )
+                                                            )}
+
+                                                        </div>
+
+                                                        <p className="mt-2 text-[11px] text-[#5B4B75]/40">
+
+                                                            {order.items?.length ||
+                                                                0}{" "}
+
+                                                            {order.items?.length ===
+                                                            1
+                                                                ? "product"
+                                                                : "products"}
+
+                                                        </p>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                            {/* ==================================================
+                                                ADDRESS
+                                            ================================================== */}
+
+                                            <div className="text-xs leading-relaxed text-[#5B4B75]/60">
+
+                                                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5B4B75]/35">
+                                                    Delivery Address
+                                                </p>
+
+                                                {order.address ? (
+                                                    <>
+                                                        <p className="font-medium text-[#2E1A47]">
+                                                            {
+                                                                order
+                                                                    .address
+                                                                    .fullName
+                                                            }
+                                                        </p>
+
+                                                        <p>
+                                                            {
+                                                                order
+                                                                    .address
+                                                                    .area
+                                                            }
+                                                        </p>
+
+                                                        <p>
+                                                            {
+                                                                order
+                                                                    .address
+                                                                    .city
+                                                            }
+                                                            ,{" "}
+                                                            {
+                                                                order
+                                                                    .address
+                                                                    .state
+                                                            }
+                                                        </p>
+
+                                                        <p>
+                                                            {
+                                                                order
+                                                                    .address
+                                                                    .phoneNumber
+                                                            }
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <p className="text-[#5B4B75]/40">
+                                                        Address unavailable
+                                                    </p>
+                                                )}
+
+                                            </div>
+
+                                            {/* ==================================================
+                                                AMOUNT
+                                            ================================================== */}
+
+                                            <div className="md:min-w-[110px] md:text-right">
+
+                                                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5B4B75]/35">
+                                                    Total
+                                                </p>
+
+                                                <p className="mt-1 text-xl font-serif text-[#2E1A47]">
+                                                    {currency}
+                                                    {order.amount}
+                                                </p>
+
+                                                <p className="mt-1 text-[10px] text-[#5B4B75]/40">
+                                                    Cash on Delivery
+                                                </p>
+
+                                                <p className="mt-0.5 text-[10px] font-medium text-[#F5B700]">
+                                                    Payment Pending
+                                                </p>
+
+                                            </div>
+
+                                            {/* ==================================================
+                                                STATUS / ACTION
+                                            ================================================== */}
+
+                                            <div className="md:min-w-[150px]">
+
+                                                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5B4B75]/35">
+                                                    Order Status
+                                                </p>
+
+                                                <p
+                                                    className={`
+                                                        mb-3
+                                                        text-xs
+                                                        font-medium
+                                                        ${statusStyle.text}
+                                                    `}
                                                 >
                                                     {order.status}
-                                                </span>
-                                            </span>
+                                                </p>
 
-                                        </p>
+                                                {/* DISPATCH */}
 
-                                        {/* ACTION BUTTONS */}
+                                                {order.status ===
+                                                    "Order placed" && (
 
-                                        {order.status === "Order placed" && (
-                                            <button
-                                                onClick={() =>
-                                                    updateOrderStatus(
-                                                        order._id,
-                                                        "Dispatched"
-                                                    )
-                                                }
-                                                className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-                                            >
-                                                Dispatch
-                                            </button>
-                                        )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            updateOrderStatus(
+                                                                order._id,
+                                                                "Dispatched"
+                                                            )
+                                                        }
+                                                        className="
+                                                            w-full
+                                                            rounded-full
+                                                            bg-[#2E7D6B]
+                                                            px-4
+                                                            py-2.5
+                                                            text-[11px]
+                                                            font-semibold
+                                                            text-white
+                                                            transition-all
+                                                            duration-300
+                                                            hover:-translate-y-0.5
+                                                            hover:bg-[#246654]
+                                                            hover:shadow-[0_8px_20px_rgba(46,125,107,0.18)]
+                                                            active:scale-[0.98]
+                                                        "
+                                                    >
+                                                        Dispatch Order
+                                                    </button>
 
-                                        {order.status === "Dispatched" && (
-                                            <button
-                                                onClick={() =>
-                                                    updateOrderStatus(
-                                                        order._id,
-                                                        "Delivered"
-                                                    )
-                                                }
-                                                className="mt-3 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-                                            >
-                                                Mark as Delivered
-                                            </button>
-                                        )}
+                                                )}
+
+                                                {/* DELIVER */}
+
+                                                {order.status ===
+                                                    "Dispatched" && (
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            updateOrderStatus(
+                                                                order._id,
+                                                                "Delivered"
+                                                            )
+                                                        }
+                                                        className="
+                                                            w-full
+                                                            rounded-full
+                                                            bg-[#2E7D6B]
+                                                            px-4
+                                                            py-2.5
+                                                            text-[11px]
+                                                            font-semibold
+                                                            text-white
+                                                            transition-all
+                                                            duration-300
+                                                            hover:-translate-y-0.5
+                                                            hover:bg-[#246654]
+                                                            hover:shadow-[0_8px_20px_rgba(46,125,107,0.18)]
+                                                            active:scale-[0.98]
+                                                        "
+                                                    >
+                                                        Mark as Delivered
+                                                    </button>
+
+                                                )}
+
+                                                {/* DELIVERED */}
+
+                                                {order.status ===
+                                                    "Delivered" && (
+
+                                                    <div className="
+                                                        flex
+                                                        items-center
+                                                        justify-center
+                                                        gap-2
+                                                        rounded-full
+                                                        bg-[#2E7D6B]/8
+                                                        px-4
+                                                        py-2.5
+                                                        text-[11px]
+                                                        font-medium
+                                                        text-[#2E7D6B]
+                                                    ">
+
+                                                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2E7D6B] text-[9px] text-white">
+                                                            ✓
+                                                        </span>
+
+                                                        Delivered
+
+                                                    </div>
+
+                                                )}
+
+                                            </div>
+
+                                        </div>
 
                                     </div>
 
                                 </div>
-                            ))}
 
-                        </div>
-                    )}
+                            );
+                        })}
 
-                </div>
-            )}
+                    </div>
+
+                )}
+
+            </div>
 
         </div>
     );
