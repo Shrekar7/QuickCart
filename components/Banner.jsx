@@ -391,7 +391,7 @@ const Banner = () => {
                                     text-[#6F617B]
                                 "
                             >
-                                Sunshine Fancy Costumes
+                                SNG Costume World
                             </span>
                         </div>
 

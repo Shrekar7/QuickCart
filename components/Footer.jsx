@@ -3,556 +3,360 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { assets } from "@/assets/assets";
+import sgnLogo from "@/assets/SNG-logo2.png";
+
+const GOOGLE_URL = "https://share.google/Rwj7bhAEXCwLJcVpu";
+
+// Replace these placeholder URLs with your actual social profiles.
+const SOCIAL_LINKS = [
+  {
+    name: "Instagram",
+    href: "#",
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
+    name: "Facebook",
+    href: "#",
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path d="M13.4 21v-8.2h2.8l.4-3.2h-3.2v-2c0-.9.3-1.6 1.6-1.6h1.7V3.2c-.8-.1-1.6-.2-2.5-.2-2.5 0-4.2 1.5-4.2 4.3v2.3H7.2v3.2H10V21h3.4Z" />
+      </svg>
+    ),
+  },
+  {
+    name: "WhatsApp",
+    href: "https://wa.me/919704022443",
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M20.2 11.8a8.2 8.2 0 0 1-12.1 7.1L4 20l1.2-4a8.2 8.2 0 1 1 15-4.2Z" />
+        <path d="M9 8.2c.2-.4.4-.4.7-.4h.5c.2 0 .3.1.4.4l.7 1.7c.1.3 0 .5-.2.7l-.5.6c-.2.2-.2.4 0 .7.6 1 1.5 1.9 2.5 2.4.3.2.5.2.7-.1l.8-.9c.2-.2.4-.2.7-.1l1.7.8c.3.1.4.3.4.5 0 .3-.2 1.1-.8 1.5-.6.5-1.4.7-2.3.5-1-.2-2.2-.7-3.7-2-1.8-1.6-2.7-3.4-2.8-4.4-.1-.8.2-1.5.6-1.9Z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Google",
+    href: GOOGLE_URL,
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M21.6 12.2c0-.7-.1-1.4-.2-2.1H12v3.9h5.4a4.7 4.7 0 0 1-2 3.1v2.5h3.2c1.9-1.8 3-4.3 3-7.4Z"
+          fill="#4285F4"
+        />
+        <path
+          d="M12 22c2.7 0 4.9-.9 6.6-2.4l-3.2-2.5c-.9.6-2 .9-3.4.9-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Z"
+          fill="#34A853"
+        />
+        <path
+          d="M6.4 13.9a6 6 0 0 1 0-3.8V7.5H3.1a10 10 0 0 0 0 9l3.3-2.6Z"
+          fill="#FBBC05"
+        />
+        <path
+          d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9C16.9 2.9 14.7 2 12 2a10 10 0 0 0-8.9 5.5l3.3 2.6C7.2 7.7 9.4 6 12 6Z"
+          fill="#EA4335"
+        />
+      </svg>
+    ),
+  },
+];
+
+const FOOTER_LINKS = [
+  { label: "Home", href: "/" },
+  { label: "About us", href: "/about" },
+  { label: "Shop all costumes", href: "/all-products" },
+  { label: "Contact us", href: "/contact" },
+  { label: "Privacy policy", href: "/privacy" },
+];
+
+const ArrowUpRight = () => (
+  <svg
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-4 w-4"
+    aria-hidden="true"
+  >
+    <path d="M5 15 15 5M6 5h9v9" />
+  </svg>
+);
 
 const Footer = () => {
   return (
-    <footer className="relative overflow-hidden bg-white">
+    <footer className="relative overflow-hidden border-t border-[#EAE7E1] bg-[#FCFBF8] text-[#242321]">
 
-      {/* =================================================
-          AMBIENT BACKGROUND
-      ================================================= */}
-
+      {/* Subtle decorative background */}
       <div
-        className="
-          absolute
-          inset-0
-          -z-10
-          overflow-hidden
-        "
-      >
-        <div
-          className="
-            absolute
-            -top-48
-            left-1/2
-            -translate-x-1/2
-            w-[750px]
-            h-[500px]
-            rounded-full
-            bg-gradient-to-br
-            from-yellow-200
-            via-pink-200
-            to-purple-300
-            blur-[120px]
-            opacity-40
-          "
-        />
-      </div>
+        className="pointer-events-none absolute -top-40 left-1/2 h-80 w-[min(90%,800px)] -translate-x-1/2 rounded-full bg-[#F5E9D4]/50 blur-[100px]"
+        aria-hidden="true"
+      />
 
-      {/* =================================================
-          FOUNDER SPOTLIGHT
-      ================================================= */}
+      {/* Brand introduction */}
+      <section className="relative px-5 pb-12 pt-16 sm:px-8 sm:pb-16 sm:pt-20 lg:px-16 lg:pt-24">
+        <div className="mx-auto max-w-4xl text-center">
 
-      <section className="px-6 md:px-16 lg:px-32 pt-20">
-
-        <div
-          className="
-            max-w-5xl
-            mx-auto
-            flex
-            flex-col
-            md:flex-row
-            items-center
-            gap-10
-            p-8
-            md:p-12
-            rounded-[36px]
-            bg-white/70
-            backdrop-blur-xl
-            border
-            border-black/[0.06]
-            shadow-[0_30px_80px_rgba(0,0,0,0.08)]
-          "
-        >
-
-          {/* OWNER IMAGE */}
-
-          <div
-            className="
-              relative
-              w-40
-              h-40
-              md:w-44
-              md:h-44
-              shrink-0
-            "
-          >
-
-            <div
-              className="
-                absolute
-                -inset-3
-                rounded-full
-                bg-gradient-to-br
-                from-yellow-300
-                via-red-300
-                to-blue-300
-                blur-md
-                opacity-60
-              "
-            />
-
-            <div
-              className="
-                relative
-                w-full
-                h-full
-                overflow-hidden
-                rounded-full
-                border-[5px]
-                border-white
-                shadow-xl
-              "
-            >
-              <Image
-                src={assets.owner}
-                alt="Founder"
-                fill
-                sizes="176px"
-                className="object-cover"
-              />
-            </div>
-
+          <div className="mb-5 flex items-center justify-center gap-3">
+            <span className="h-px w-8 bg-[#C49A53]" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#96713A] sm:text-xs">
+              SNG Costume World
+            </span>
+            <span className="h-px w-8 bg-[#C49A53]" />
           </div>
 
-          {/* OWNER CONTENT */}
+          <h2 className="mx-auto max-w-3xl text-3xl font-medium leading-tight tracking-[-0.045em] text-[#242321] sm:text-4xl md:text-5xl">
+            Every costume tells
+            <span className="font-serif italic text-[#A47B3F]">
+              {" "}a story.
+            </span>
+          </h2>
 
-          <div className="text-center md:text-left">
-
-            <p
-              className="
-                text-xs
-                uppercase
-                tracking-[0.25em]
-                font-semibold
-                text-purple-500
-              "
-            >
-              Founder & Creator
-            </p>
-
-            <h2
-              className="
-                mt-2
-                text-4xl
-                md:text-5xl
-                font-semibold
-                tracking-tight
-                text-[#1D1D1F]
-              "
-            >
-              Nagesh Shinde
-            </h2>
-
-            {/* LEGO COLOR STRIP */}
-
-            <div
-              className="
-                flex
-                justify-center
-                md:justify-start
-                gap-2
-                mt-5
-              "
-            >
-              <span className="w-10 h-2 rounded-full bg-yellow-400" />
-              <span className="w-10 h-2 rounded-full bg-red-500" />
-              <span className="w-10 h-2 rounded-full bg-blue-500" />
-            </div>
-
-            <p
-              className="
-                mt-5
-                max-w-lg
-                text-sm
-                leading-relaxed
-                text-[#6E6E73]
-              "
-            >
-              Creating costumes that help every child become
-              their favorite character — one adventure,
-              one celebration, and one memory at a time.
-            </p>
-
-            {/* =================================================
-                SOCIAL LINKS
-            ================================================= */}
-
-            <div
-              className="
-                flex
-                justify-center
-                md:justify-start
-                gap-3
-                mt-7
-              "
-            >
-
-              {/* INSTAGRAM */}
-
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="
-                  group
-                  w-11
-                  h-11
-                  rounded-xl
-                  bg-gradient-to-br
-                  from-yellow-400
-                  via-pink-500
-                  to-purple-600
-                  flex
-                  items-center
-                  justify-center
-                  shadow-sm
-                  hover:-translate-y-1
-                  hover:shadow-lg
-                  transition-all
-                  duration-300
-                "
-              >
-                <Image
-                  src={assets.instagram_icon}
-                  alt="Instagram"
-                  className="
-                    w-5
-                    h-5
-                    brightness-0
-                    invert
-                    group-hover:scale-110
-                    transition-transform
-                  "
-                />
-              </a>
-
-              {/* FACEBOOK */}
-
-              <a
-                href="#"
-                aria-label="Facebook"
-                className="
-                  group
-                  w-11
-                  h-11
-                  rounded-xl
-                  bg-blue-500
-                  flex
-                  items-center
-                  justify-center
-                  hover:-translate-y-1
-                  hover:shadow-lg
-                  transition-all
-                  duration-300
-                "
-              >
-                <Image
-                  src={assets.facebook_icon}
-                  alt="Facebook"
-                  className="
-                    w-5
-                    h-5
-                    brightness-0
-                    invert
-                    group-hover:scale-110
-                    transition-transform
-                  "
-                />
-              </a>
-
-              {/* GOOGLE LINK */}
-
-              <a
-                href="https://share.google/Rwj7bhAEXCwLJcVpu"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Google"
-                className="
-                  group
-                  w-11
-                  h-11
-                  rounded-xl
-                  bg-white
-                  border
-                  border-black/10
-                  flex
-                  items-center
-                  justify-center
-                  shadow-sm
-                  hover:-translate-y-1
-                  hover:shadow-lg
-                  transition-all
-                  duration-300
-                "
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="
-                    w-5
-                    h-5
-                    group-hover:scale-110
-                    transition-transform
-                  "
-                >
-                  <path
-                    fill="#4285F4"
-                    d="M21.35 12.27c0-.68-.06-1.34-.17-1.97H12v3.73h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.15Z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 21.8c2.63 0 4.84-.87 6.45-2.38l-3.14-2.45c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.03H3.3v2.53A9.74 9.74 0 0 0 12 21.8Z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M6.54 13.87A5.86 5.86 0 0 1 6.23 12c0-.65.11-1.28.31-1.87V7.6H3.3A9.77 9.77 0 0 0 2.25 12c0 1.58.38 3.08 1.05 4.4l3.24-2.53Z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 6.1c1.43 0 2.72.49 3.73 1.45l2.8-2.8C16.83 3.16 14.63 2.2 12 2.2a9.74 9.74 0 0 0-8.7 5.4l3.24 2.53C7.31 7.82 9.46 6.1 12 6.1Z"
-                  />
-                </svg>
-              </a>
-
-              {/* WHATSAPP */}
-
-              <a
-                href="#"
-                aria-label="Whatsapp"
-                className="
-                  group
-                  w-11
-                  h-11
-                  rounded-xl
-                  bg-green-500
-                  flex
-                  items-center
-                  justify-center
-                  hover:-translate-y-1
-                  hover:shadow-lg
-                  transition-all
-                  duration-300
-                "
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="
-                    w-5
-                    h-5
-                    text-white
-                    group-hover:scale-110
-                    transition-transform
-                  "
-                >
-                  <path
-                    d="
-                    M20.52 3.48A11.8 11.8 0 0 0 12.05 0
-                    C5.5 0 .17 5.33.17 11.88
-                    c0 2.09.55 4.13 1.6 5.93L0 24l6.36-1.67
-                    a11.86 11.86 0 0 0 5.69 1.45h.01
-                    c6.55 0 11.88-5.33 11.88-11.88
-                    0-3.17-1.23-6.15-3.42-8.42Z
-                    "
-                  />
-                </svg>
-              </a>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* =================================================
-          MAIN FOOTER GRID
-      ================================================= */}
-
-      <section
-        className="
-          max-w-[1400px]
-          mx-auto
-          px-6
-          md:px-16
-          lg:px-32
-          py-20
-          grid
-          grid-cols-1
-          md:grid-cols-3
-          gap-14
-        "
-      >
-
-        {/* BRAND */}
-
-        <div>
-
-          <Image
-            src={assets.logo}
-            alt="logo"
-            className="w-52 h-auto"
-          />
-
-          <p
-            className="
-              mt-6
-              max-w-sm
-              text-sm
-              leading-relaxed
-              text-[#6E6E73]
-            "
-          >
-            Costumes designed for imagination,
-            creativity and unforgettable moments.
-            From school plays to birthday adventures,
-            we help every child become their favorite
-            character.
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-[#73716B] sm:text-base sm:leading-8">
+            From little dreamers to big adventures, we bring
+            imagination to life with costumes that inspire
+            creativity, celebrate individuality, and make
+            every special moment unforgettable.
           </p>
 
-          <div
-            className="
-              flex
-              gap-2
-              mt-8
-            "
-          >
-            <span className="w-9 h-9 rounded-xl bg-yellow-400 shadow-sm" />
-            <span className="w-9 h-9 rounded-xl bg-red-500 shadow-sm" />
-            <span className="w-9 h-9 rounded-xl bg-blue-500 shadow-sm" />
-            <span className="w-9 h-9 rounded-xl bg-green-500 shadow-sm" />
-          </div>
+          <p className="mt-5 text-[10px] font-medium uppercase tracking-[0.22em] text-[#99948A] sm:text-xs">
+            Made for little dreams. Designed for big adventures.
+          </p>
 
+          {/* Social media links */}
+          <div className="mt-8 flex items-center justify-center gap-3">
+            {SOCIAL_LINKS.map((social) => (
+              <a
+                key={social.name}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Visit us on ${social.name}`}
+                className="group flex h-11 w-11 items-center justify-center rounded-full border border-[#E6E0D6] bg-white text-[#555149] transition-all duration-300 hover:-translate-y-1 hover:border-[#B9975B] hover:bg-[#B9975B] hover:text-white hover:shadow-md sm:h-12 sm:w-12"
+              >
+                <span className="h-[19px] w-[19px] transition-transform duration-300 group-hover:scale-110">
+                  {social.icon}
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Elegant divider */}
+      <div className="mx-auto max-w-[1400px] px-5 sm:px-8 lg:px-16">
+        <div className="h-px bg-gradient-to-r from-transparent via-[#E5DED2] to-transparent" />
+      </div>
+
+      {/* Main footer */}
+      <section className="relative mx-auto grid max-w-[1400px] grid-cols-1 gap-10 px-5 py-12 sm:grid-cols-2 sm:px-8 sm:py-14 md:gap-12 lg:grid-cols-12 lg:gap-10 lg:px-16 lg:py-16">
+
+        {/* Brand column */}
+        <div className="sm:col-span-2 lg:col-span-5">
+          <Link
+            href="/"
+            aria-label="Sunshine Fancy Costumes homepage"
+            className="inline-flex rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9975B]"
+          >
+            <Image
+              src={sgnLogo}
+              alt="SGN Costume World"
+              width={220}
+              height={90}
+              className="h-auto w-56 object-contain object-left sm:w-64 lg:w-72"
+            />
+          </Link>
+
+          <p className="mt-5 max-w-sm text-sm leading-7 text-[#73716B]">
+            Discover costumes for every character, celebration,
+            and unforgettable occasion. Helping families turn
+            imaginative ideas into extraordinary memories.
+          </p>
+
+          <a
+            href={GOOGLE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-[#88652F] transition-colors hover:text-[#5F451F]"
+          >
+            Discover our store
+            <ArrowUpRight />
+          </a>
         </div>
 
-        {/* EXPLORE */}
-
-        <div>
-
-          <h3
-            className="
-              text-base
-              font-semibold
-              text-[#1D1D1F]
-              mb-6
-            "
-          >
+        {/* Navigation column */}
+        <div className="lg:col-span-3">
+          <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#242321]">
             Explore
           </h3>
 
-          <div
-            className="
-              space-y-4
-              text-sm
-              text-[#6E6E73]
-            "
-          >
-
-            <Link
-              href="/"
-              className="block hover:text-black transition"
-            >
-              Home
-            </Link>
-
-            <Link
-              href="/about"
-              className="block hover:text-black transition"
-            >
-              About Us
-            </Link>
-
-            <Link
-              href="/all-products"
-              className="block hover:text-black transition"
-            >
-              Shop
-            </Link>
-
-            <Link
-              href="/contact"
-              className="block hover:text-black transition"
-            >
-              Contact
-            </Link>
-
-            <Link
-              href="/privacy"
-              className="block hover:text-black transition"
-            >
-              Privacy Policy
-            </Link>
-
-          </div>
-
+          <nav aria-label="Footer navigation">
+            <ul className="space-y-4">
+              {FOOTER_LINKS.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="group inline-flex items-center gap-2 text-sm text-[#73716B] transition-colors duration-200 hover:text-[#88652F]"
+                  >
+                    <span>{item.label}</span>
+                    <span className="opacity-0 transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100">
+                      <ArrowUpRight />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
 
-        {/* CONTACT */}
-
-        <div>
-
-          <h3
-            className="
-              text-base
-              font-semibold
-              text-[#1D1D1F]
-              mb-6
-            "
-          >
+        {/* Contact column */}
+        <div className="lg:col-span-4">
+          <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#242321]">
             Get in touch
           </h3>
 
-          <div
-            className="
-              space-y-4
-              text-sm
-              text-[#6E6E73]
-            "
-          >
+          <div className="space-y-5">
 
+            {/* Phone */}
             <a
               href="tel:+919704022443"
-              className="block hover:text-black transition"
+              className="group flex items-start gap-3"
             >
-              +91-9704022443
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E8E1D6] bg-white text-[#88652F] transition-colors group-hover:border-[#B9975B]">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-[18px] w-[18px]"
+                  aria-hidden="true"
+                >
+                  <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 8.9a16 16 0 0 0 6 6l1.2-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.8 2.1Z" />
+                </svg>
+              </span>
+
+              <span className="pt-0.5">
+                <span className="block text-xs text-[#99948A]">
+                  Call us
+                </span>
+                <span className="mt-1 block text-sm font-medium text-[#393730] transition-colors group-hover:text-[#88652F]">
+                  +91 97040 22443
+                </span>
+              </span>
             </a>
 
+            {/* Location */}
             <a
-              href="mailto:contact@yourstore.com"
-              className="block hover:text-black transition"
+              href={GOOGLE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-start gap-3"
             >
-              contact@yourstore.com
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E8E1D6] bg-white text-[#88652F] transition-colors group-hover:border-[#B9975B]">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-[18px] w-[18px]"
+                  aria-hidden="true"
+                >
+                  <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+              </span>
+
+              <span className="pt-0.5">
+                <span className="block text-xs text-[#99948A]">
+                  Find our store
+                </span>
+                <span className="mt-1 block text-sm font-medium text-[#393730] transition-colors group-hover:text-[#88652F]">
+                  Hyderabad, India
+                </span>
+                <span className="mt-1 block text-xs text-[#99948A]">
+                  View location on Google
+                </span>
+              </span>
             </a>
 
-            <p>
-              Hyderabad, India
-            </p>
-
+            {/* WhatsApp contact */}
+            <a
+              href="https://wa.me/919704022443"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-[#D9C8A8] px-4 py-2.5 text-xs font-semibold text-[#88652F] transition-all duration-200 hover:border-[#88652F] hover:bg-[#88652F] hover:text-white"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <path d="M20.2 11.8a8.2 8.2 0 0 1-12.1 7.1L4 20l1.2-4a8.2 8.2 0 1 1 15-4.2Z" />
+                <path d="M9 8.2c.2-.4.4-.4.7-.4h.5c.2 0 .3.1.4.4l.7 1.7c.1.3 0 .5-.2.7l-.5.6c-.2.2-.2.4 0 .7.6 1 1.5 1.9 2.5 2.4.3.2.5.2.7-.1l.8-.9c.2-.2.4-.2.7-.1l1.7.8c.3.1.4.3.4.5 0 .3-.2 1.1-.8 1.5-.6.5-1.4.7-2.3.5-1-.2-2.2-.7-3.7-2-1.8-1.6-2.7-3.4-2.8-4.4-.1-.8.2-1.5.6-1.9Z" />
+              </svg>
+              Chat with us
+              <ArrowUpRight />
+            </a>
           </div>
-
         </div>
-
       </section>
 
-      {/* =================================================
-          COPYRIGHT
-      ================================================= */}
+      {/* Bottom bar */}
+      <div className="relative border-t border-[#EAE5DC]">
+        <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-3 px-5 py-5 text-center sm:px-8 md:flex-row md:text-left lg:px-16">
 
-      <div
-        className="
-          border-t
-          border-black/[0.06]
-          py-6
-          text-center
-          text-xs
-          text-[#86868B]
-        "
-      >
-        © 2026 Sunshine Fancy Costumes.
-        Crafted with imagination ❤️
+          <p className="text-xs leading-5 text-[#89857D]">
+            © {new Date().getFullYear()} Sunshine Fancy Costumes.
+            All rights reserved.
+          </p>
+
+          <p className="flex items-center gap-1.5 text-xs text-[#89857D]">
+            Made with
+            <span className="text-[#B78C4A]" aria-label="love">
+              ♥
+            </span>
+            for little dreamers everywhere.
+          </p>
+        </div>
       </div>
-
     </footer>
   );
 };

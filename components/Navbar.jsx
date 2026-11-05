@@ -21,6 +21,8 @@ import {
   BagIcon,
 } from "@/assets/assets";
 
+import sgnLogo from "@/assets/SNG-logo2.png";
+
 import {
   useAppContext,
 } from "@/context/AppContext";
@@ -768,16 +770,14 @@ const Navbar = () => {
           "
         >
           <Image
-            src={assets.logo}
-            alt="Logo"
-            width={140}
-            height={40}
+            src={sgnLogo}
+            alt="SGN Costume World"
             priority
             className="
-              w-[105px]
-              sm:w-[115px]
-              md:w-[125px]
-              h-auto
+              h-10
+              sm:h-11
+              md:h-14
+              w-auto
             "
           />
         </Link>
@@ -1220,4 +1220,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

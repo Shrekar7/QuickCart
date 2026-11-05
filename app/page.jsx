@@ -8,18 +8,20 @@ import FeaturedProduct from "@/components/FeaturedProduct";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NewArrivals from "@/components/NewArrivals";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 
 const Home = () => {
   return (
     <>
       <Navbar/>
       <div className="px-6 md:px-16 lg:px-32">
+        <FloatingWhatsApp />
         <HeaderSlider />
         <NewArrivals/>
         <FeaturedProduct />
         <HomeProducts />
         <Banner />
-        <NewsLetter />
+        {/* <NewsLetter /> */}
       </div>
       <Footer />
     </>

@@ -16,6 +16,9 @@ const categories = [
     "Indian State & Dance",
 ];
 
+// Special dropdown value that means "let me type my own category"
+const CUSTOM_CATEGORY = "__custom__";
+
 const ageSizes = [
     "0-1Y",
     "1-2Y",
@@ -45,6 +48,7 @@ const AddProduct = () => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState(categories[0]);
+    const [customCategory, setCustomCategory] = useState("");
 
     const [price, setPrice] = useState("");
     const [offerPrice, setOfferPrice] = useState("");
@@ -52,6 +56,8 @@ const AddProduct = () => {
     const [sizingMode, setSizingMode] = useState("age");
 
     const [selectedSizes, setSelectedSizes] = useState([]);
+
+    const isCustomCategory = category === CUSTOM_CATEGORY;
 
     const activeOptions =
         sizingMode === "age"
@@ -106,6 +112,38 @@ const AddProduct = () => {
             return;
         }
 
+        /*
+         * -----------------------------------------
+         * CATEGORY (dropdown or custom)
+         * -----------------------------------------
+         */
+
+        let finalCategory = category;
+
+        if (isCustomCategory) {
+            const typed = customCategory
+                .trim()
+                .replace(/\s+/g, " ");
+
+            if (!typed) {
+                toast.error(
+                    "Please enter a category name"
+                );
+                return;
+            }
+
+            // If it matches an existing category (ignoring
+            // capitals), reuse that one so you don't end up
+            // with both "Halloween" and "halloween".
+            const existing = categories.find(
+                (cat) =>
+                    cat.toLowerCase() ===
+                    typed.toLowerCase()
+            );
+
+            finalCategory = existing || typed;
+        }
+
         if (selectedSizes.length === 0) {
             toast.error(
                 `Please select at least one ${
@@ -141,7 +179,7 @@ const AddProduct = () => {
             );
             formData.append(
                 "category",
-                category
+                finalCategory
             );
 
             formData.append(
@@ -253,6 +291,7 @@ const AddProduct = () => {
                 setName("");
                 setDescription("");
                 setCategory(categories[0]);
+                setCustomCategory("");
                 setPrice("");
                 setOfferPrice("");
                 setSizingMode("age");
@@ -429,7 +468,7 @@ const AddProduct = () => {
 
                     {/* CATEGORY */}
 
-                    <div className="flex flex-col gap-1.5 w-40">
+                    <div className="flex flex-col gap-1.5 w-48">
 
                         <label
                             className="text-sm font-semibold text-[#2E1A47]"
@@ -458,6 +497,14 @@ const AddProduct = () => {
                                     </option>
                                 )
                             )}
+
+                            <option
+                                value={
+                                    CUSTOM_CATEGORY
+                                }
+                            >
+                                + Custom category…
+                            </option>
                         </select>
 
                     </div>
@@ -519,6 +566,42 @@ const AddProduct = () => {
                     </div>
 
                 </div>
+
+                {/* CUSTOM CATEGORY NAME */}
+
+                {isCustomCategory && (
+                    <div className="flex flex-col gap-1.5">
+
+                        <label
+                            className="text-sm font-semibold text-[#2E1A47]"
+                            htmlFor="custom-category"
+                        >
+                            Custom category name
+                        </label>
+
+                        <input
+                            id="custom-category"
+                            type="text"
+                            maxLength={40}
+                            placeholder="e.g. Wedding"
+                            className={`${inputClass} sm:max-w-xs`}
+                            onChange={(e) =>
+                                setCustomCategory(
+                                    e.target.value
+                                )
+                            }
+                            value={customCategory}
+                            autoFocus
+                            required
+                        />
+
+                        <p className="text-xs text-[#5B4B75]/50">
+                            This product will be saved under
+                            the name you type.
+                        </p>
+
+                    </div>
+                )}
 
                 {/* SIZE SELECTOR */}
 
